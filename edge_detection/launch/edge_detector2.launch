@@ -1,0 +1,19 @@
+<launch>
+  <arg name="image_topic_name_right" default="/stereo/right/image_raw"/>
+  <arg name="image_topic_name_left" default="/stereo/left/image_raw"/>
+  <arg name="threshold" default="50"/>
+
+ 
+  <node name="edge_detector_right" pkg="edge_detection"
+   type="canny_detector" output="screen">
+    <param name="image_topic_name" value="$(arg image_topic_name_right)"/>
+    <param name="detection_threshold" value="$(arg threshold)"/>
+  </node>
+
+  <node name="edge_detector_left" pkg="edge_detection"
+   type="canny_detector" output="screen">
+    <param name="image_topic_name" value="$(arg image_topic_name_left)"/>
+    <param name="detection_treshold" value="$(arg threshold)"/>
+  </node>
+
+</launch>

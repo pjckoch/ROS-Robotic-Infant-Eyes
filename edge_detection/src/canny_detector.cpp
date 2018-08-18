@@ -55,35 +55,33 @@ public:
     // variables
     int lowThreshold = 0;
     const int ratio = 3;
-    const int kernel = 3;
+    const int kernel_size = 3;
 
-    cv::Mat src_gray;
+    cv::Mat gray;
     cv::Mat dst, edges;
 
     // convert to gray image
-    cvtColor(cv_ptr->image, src_gray, CV_BGR2GRAY); 
+    cvtColor(cv_ptr->image, gray, CV_BGR2GRAY); 
 
     // check whether given threshold is valid
     if (threshold <= 100){
-        ROS_DEBUG_STREAM("\n\nthreshold set to " << threshold << "\n\n");
         lowThreshold = threshold;
     }
     else
         ROS_DEBUG_STREAM("\n\nPlease enter a valid threshold value between 0 and 100\n\n");
     
     // Reduce noise
-    cv::blur(src_gray, edges, cv::Size(3,3));
+    cv::GaussianBlur(gray, edges, cv::Size(3,3), 0, 0);
 
     // Canny edge detector
-    cv::Canny(edges, edges, lowThreshold, lowThreshold*ratio, kernel);
+    cv::Canny(edges, edges, lowThreshold, lowThreshold*ratio, kernel_size);
 
-    // Mask image with Canny results
+    // Mask gray image with Canny results and store it in dst matrix
     dst = cv::Scalar::all(0);
-
-    src_gray.copyTo(dst, edges);
+    gray.copyTo(dst, edges);
 
     // Update GUI Window
-    cv::imshow(OPENCV_WINDOW, edges);
+    cv::imshow(OPENCV_WINDOW, dst);
     cv::waitKey(3);
 
     // Output modified video stream

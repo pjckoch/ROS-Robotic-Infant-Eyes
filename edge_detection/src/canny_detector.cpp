@@ -25,7 +25,7 @@ public:
   {
     // Subscribe to input video feed and publish output video feed
     nh_.getParam("image_topic_name", input_topic_name);
-    nh_.getParam("detection_threshold", threshold);
+    nh_.getParam("/detection_threshold", threshold);
     image_sub_ = it_.subscribe(input_topic_name, 1,
       &CannyDetector::detect, this);
     image_pub_ = it_.advertise("/edgeDetector/canny", 1);
@@ -53,7 +53,7 @@ public:
 
 
     // variables
-    int lowThreshold = 50;
+    int lowThreshold = 0;
     const int ratio = 3;
     const int kernel = 3;
 
@@ -64,9 +64,11 @@ public:
     cvtColor(cv_ptr->image, src_gray, CV_BGR2GRAY); 
 
     // check whether given threshold is valid
-    //if (threshold <= 100)
-    //    lowThreshold = threshold;
-    //else
+    if (threshold <= 100){
+        ROS_DEBUG_STREAM("\n\nthreshold set to " << threshold << "\n\n");
+        lowThreshold = threshold;
+    }
+    else
         ROS_DEBUG_STREAM("\n\nPlease enter a valid threshold value between 0 and 100\n\n");
     
     // Reduce noise
@@ -91,7 +93,8 @@ public:
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "image_converter");
+  ros::init(argc, argv, "edge_detector");
+  ROS_DEBUG_STREAM("test: main\n");
   CannyDetector cd;
   ros::spin();
   return 0;

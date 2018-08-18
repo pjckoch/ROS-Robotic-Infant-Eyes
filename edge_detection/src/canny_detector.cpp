@@ -18,6 +18,7 @@ class CannyDetector
   image_transport::Publisher image_pub_;
   std::string input_topic_name;
   int threshold;
+  const int default_threshold = 50;
 
 public:
   CannyDetector()
@@ -26,10 +27,20 @@ public:
     // Subscribe to input video feed and publish output video feed
     nh_.getParam("image_topic_name", input_topic_name);
     nh_.getParam("/detection_threshold", threshold);
+    // check whether given threshold is valid
+    if (threshold >= 0 && threshold <= 100){
+        std::cout << std::endl << std::endl << "Edge detection threshold set     to " << threshold << std::endl << std::endl;
+    }
+    else {
+        std::cout << std::endl << std::endl << "Please enter a valid thresho    ld value between 0 and 100" << std::endl << std::endl;
+    threshold = default_threshold;
+    }
+
+    // set up subscriber and publisher
     image_sub_ = it_.subscribe(input_topic_name, 1,
       &CannyDetector::detect, this);
     image_pub_ = it_.advertise("/edgeDetector/canny", 1);
-
+    
     cv::namedWindow(OPENCV_WINDOW);
   }
 
@@ -53,7 +64,6 @@ public:
 
 
     // variables
-    int lowThreshold = 0;
     const int ratio = 3;
     const int kernel_size = 3;
 
@@ -63,18 +73,11 @@ public:
     // convert to gray image
     cvtColor(cv_ptr->image, gray, CV_BGR2GRAY); 
 
-    // check whether given threshold is valid
-    if (threshold <= 100){
-        lowThreshold = threshold;
-    }
-    else
-        ROS_DEBUG_STREAM("\n\nPlease enter a valid threshold value between 0 and 100\n\n");
-    
     // Reduce noise
     cv::GaussianBlur(gray, edges, cv::Size(3,3), 0, 0);
 
     // Canny edge detector
-    cv::Canny(edges, edges, lowThreshold, lowThreshold*ratio, kernel_size);
+    cv::Canny(edges, edges, threshold, threshold*ratio, kernel_size);
 
     // Mask gray image with Canny results and store it in dst matrix
     dst = cv::Scalar::all(0);
@@ -92,7 +95,6 @@ public:
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "edge_detector");
-  ROS_DEBUG_STREAM("test: main\n");
   CannyDetector cd;
   ros::spin();
   return 0;

@@ -1,0 +1,22 @@
+<launch>
+  <arg name="image_topic_name_right" default="image_raw"/>
+  <arg name="image_topic_name_left" default="image_raw"/>
+
+  <rosparam command="load" file="$(find blob_detection)/config/blob_parameters.yaml"/>
+
+  <group ns="/stereo/right/">
+    <param name="image_topic_name" value="$(arg image_topic_name_right)"/>
+    <node name="blob_detector_right" pkg="blob_detection" type="blob_detector" output="screen">
+      <remap from="/blobDetector/blob" to="blob"/>
+    </node>
+  </group>
+
+
+  <group ns="/stereo/left/">
+    <param name="image_topic_name" value="$(arg image_topic_name_left)"/>
+    <node name="blob_detector_left" pkg="blob_detection" type="blob_detector" output="screen">
+      <remap from="/blobDetector/blob" to="blob"/>
+    </node>
+  </group>
+
+</launch>

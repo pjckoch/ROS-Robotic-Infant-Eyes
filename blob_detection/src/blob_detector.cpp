@@ -2,21 +2,20 @@
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
-//#include <opencv2/imgproc/imgproc.hpp>
-//#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
 #include <iostream>
 
 #include <ros/console.h>
 
-//static const std::string OPENCV_WINDOW = "Canny Edge Map";
+static const std::string OPENCV_WINDOW = "Blob";
 
-class CannyDetector
+class BlobDetector
 {
   ros::NodeHandle nh_;
   image_transport::ImageTransport it_;
   image_transport::Subscriber image_sub_;
-  image_transport::Publisher edge_pub_;
-  image_transport::Publisher gray_pub_;
+  image_transport::Publisher image_pub_;
   std::string input_topic_name;
   const int ratio = 3;
   const int kernel_size = 3;
@@ -24,22 +23,21 @@ class CannyDetector
   const int default_lowerThreshold = 50;
   int upperThreshold = ratio*default_lowerThreshold;
 
-  // publish CV images as ROS sensor messages
   void publishImage(cv::Mat src, image_transport::Publisher pub) {
       sensor_msgs::Image msg;
       cv_bridge::CvImage bridge;
 
-      bridge = cv_bridge::CvImage(std_msgs::Header(), sensor_msgs::image_encodings::MONO8, src);
+      bridge = cv_bridge::CvImage(std_msgs::Header(), sensor_msgs::image_encodings::RGB8, src);
       bridge.toImageMsg(msg);
       pub.publish(msg);
   }
 
 
 public:
-  CannyDetector()
+  BlobDetector()
     : it_(nh_)
   {
-      // obtain parameters from ROS parameter server
+      // Subscribe to input video feed and publish output video feed
       nh_.getParam("image_topic_name", input_topic_name);
       nh_.getParam("/detection_lowerThreshold", lowerThreshold);
       
@@ -61,16 +59,15 @@ public:
       // set up subscriber and publisher
       image_sub_ = it_.subscribe(input_topic_name, 1,
         &CannyDetector::detect, this);
-      edge_pub_ = it_.advertise("/edgeDetector/edge_map", 1);
-      gray_pub_ = it_.advertise("/edgeDetector/image_edge_mask", 1);
+      image_pub_ = it_.advertise("/edgeDetector/canny", 1);
     
-      //cv::namedWindow(OPENCV_WINDOW);
+      cv::namedWindow(OPENCV_WINDOW);
   }
 
-  //~CannyDetector()
-  //{
-  //    cv::destroyWindow(OPENCV_WINDOW);
-  //}
+  ~CannyDetector()
+  {
+      cv::destroyWindow(OPENCV_WINDOW);
+  }
 
   void detect(const sensor_msgs::ImageConstPtr& msg)
   {
@@ -99,15 +96,15 @@ public:
       cv::Canny(edges, edges, lowerThreshold, upperThreshold, kernel_size);
 
       // Overwrite original img with masked gray image
-      gray.copyTo(dst, edges);
+      gray.copyTo(cv_ptr->image, edges);
 
       // Update GUI Window
-      //cv::imshow(OPENCV_WINDOW, dst);
-      //cv::waitKey(3);
+      cv::imshow(OPENCV_WINDOW, cv_ptr->image);
+      cv::waitKey(3);
 
-      // Publish the edge map and the masked gray-scale image
-      publishImage(edges, edge_pub_);
-      publishImage(dst, gray_pub_);
+      // Publish the edge map
+      publishImage(edges, image_pub_);
+      image_pub_.publish(cv_ptr->toImageMsg());
   }
 };
 

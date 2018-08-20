@@ -11,7 +11,8 @@
   <group ns="/stereo/right/">
     <param name="image_topic_name" value="$(arg image_topic_name_right)"/>
     <node name="edge_detector_right" pkg="edge_detection" type="canny_detector" output="screen">
-      <remap from="/edgeDetector/canny/" to="/edgeDetector/right/canny"/>
+      <remap from="/edgeDetector/edge_map" to="edge_map"/>
+      <remap from="/edgeDetector/image_edge_mask" to="image_edge_mask"/>
     </node>
   </group>
 
@@ -20,7 +21,8 @@
   <group ns="/stereo/left/">
     <param name="image_topic_name" value="$(arg image_topic_name_left)"/>
     <node name="edge_detector_left" pkg="edge_detection" type="canny_detector" output="screen">
-      <remap from="/edgeDetector/canny/" to="/edgeDetector/left/canny"/>
+      <remap from="/edgeDetector/edge_map" to="edge_map"/>
+      <remap from="/edgeDetector/image_edge_mask" to="image_edge_mask"/>
     </node>
   </group>
 

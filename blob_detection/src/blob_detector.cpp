@@ -19,16 +19,19 @@ class BlobDetector
   // temporal variables to store parameters that need to be casted lateron
   int tmp_minRepeatability;
   int tmp_blobColor;
+  ros::Time time_begin;
 
-  void publishImage(cv::Mat src, image_transport::Publisher pub) {
+  void publishImage(cv::Mat src, image_transport::Publisher pub, ros::Time begin) {
       sensor_msgs::Image msg;
       cv_bridge::CvImage bridge;
 
+      // fill msg header with timestamp (from beginning of callback)
+      msg.header.stamp = time_begin;
       bridge = cv_bridge::CvImage(std_msgs::Header(), sensor_msgs::image_encodings::BGR8, src);
       bridge.toImageMsg(msg);
       pub.publish(msg);
-  }
 
+      }
 
 public:
   BlobDetector()
@@ -86,6 +89,10 @@ public:
 
   void detect(const sensor_msgs::ImageConstPtr& msg)
   {
+      // obtain time to fill it in header later on
+      time_begin = ros::Time::now();
+
+      // convert sensor message to CV image
       cv_bridge::CvImagePtr cv_ptr;
       try
       {
@@ -113,7 +120,7 @@ public:
       cv::drawKeypoints(cv_ptr->image, keypoints, dst, cv::Scalar(0,255,0), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 
       // Publish result image
-      publishImage(dst, image_pub_);
+      publishImage(dst, image_pub_, time_begin);
   }
 };
 

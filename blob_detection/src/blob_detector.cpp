@@ -1,4 +1,5 @@
 #include <ros/ros.h>
+#include <ros/console.h>
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
@@ -6,7 +7,6 @@
 #include <iostream>
 #include <vector>
 
-#include <ros/console.h>
 
 class BlobDetector
 {
@@ -52,7 +52,7 @@ public:
       // filter by area: set minArea large enough to eliminate noise
       nh_.param("/filterByArea", params.filterByArea, false);
       nh_.param("/minArea", params.minArea, (float)25);
-      nh_.param("/maxArea", params.maxArea, (float)20000);
+      nh_.param("/maxArea", params.maxArea, (float)(320*240));
 
       // filter by circularity: circularity = 4*pi*Area/(perimeter^2)
       nh_.param("/filterByCircularity", params.filterByCircularity, false);
@@ -80,6 +80,7 @@ public:
         &BlobDetector::detect, this);
       image_pub_ = it_.advertise("/blobDetector/blob", 1);
 
+      ROS_DEBUG_STREAM("Blob detection for " << input_topic_name <<  " running.\n");
 
   }
 
@@ -119,7 +120,6 @@ public:
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "edge_detector");
-    ROS_INFO("blob detector 
     BlobDetector cd;
     ros::spin();
     return 0;

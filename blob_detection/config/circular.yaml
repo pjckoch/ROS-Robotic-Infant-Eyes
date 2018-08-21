@@ -1,4 +1,4 @@
 filterByCircularity: true
+minCircularity: 0.7
 filterByArea: true
-minArea: 500
-#filterByColor: true
+minArea: 200

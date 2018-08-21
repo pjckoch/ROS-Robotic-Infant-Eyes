@@ -44,16 +44,16 @@ public:
       nh_.getParam("image_topic_name", input_topic_name);
      
       // get Blob Parameters from ROS parameter server
-      nh_.param("/thresholdStep", params.thresholdStep, float(10));
-      nh_.param("/minThreshold", params.minThreshold, float(10));
-      nh_.param("/maxThreshold", params.maxThreshold, float(200));
+      nh_.param("/thresholdStep", params.thresholdStep, (float)10);
+      nh_.param("/minThreshold", params.minThreshold, (float)10);
+      nh_.param("/maxThreshold", params.maxThreshold, (float)220);
       nh_.param("/minRepeatability", tmp_minRepeatability, 2);
-      nh_.param("/minDistBetweenBlobs", params.minDistBetweenBlobs, float(10));
+      nh_.param("/minDistBetweenBlobs", params.minDistBetweenBlobs, (float)10);
       nh_.param("/filterByColor", params.filterByColor, false);
       nh_.param("/blobColor", tmp_blobColor, 0);
       nh_.param("/filterByArea", params.filterByArea, false);
-      nh_.param("/minArea", params.minArea, float(25));
-      nh_.param("/maxArea", params.maxArea, float(320*240));
+      nh_.param("/minArea", params.minArea, (float)25);
+      nh_.param("/maxArea", params.maxArea, (float)(320*240));
       nh_.param("/filterByCircularity", params.filterByCircularity, false);
       nh_.param("/minCircularity", params.minCircularity, 0.6f);
       nh_.param("/maxCircularity", params.maxCircularity, (float)1e37);
@@ -64,8 +64,8 @@ public:
       nh_.param("/minConvexity", params.minConvexity, 0.95f);
       nh_.param("/maxConvexity", params.maxConvexity, (float)1e37);
       
-      params.blobColor = uchar(tmp_blobColor);
-      params.minRepeatability = ulong(tmp_minRepeatability);
+      params.blobColor = (uchar)tmp_blobColor;
+      params.minRepeatability = (ulong)tmp_minRepeatability;
 
 
       // set up subscriber and publisher

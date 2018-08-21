@@ -3,15 +3,10 @@
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
 #include <opencv2/features2d.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
 #include <iostream>
 #include <vector>
 
 #include <ros/console.h>
-
-
-static const std::string OPENCV_WINDOW = "Blob Detector";
 
 class BlobDetector
 {
@@ -21,7 +16,7 @@ class BlobDetector
   image_transport::Publisher image_pub_;
   std::string input_topic_name;
   cv::SimpleBlobDetector::Params params;
-  // two parameters need to be casted
+  // temporal variables to store parameters that need to be casted lateron
   int tmp_minRepeatability;
   int tmp_blobColor;
 
@@ -29,11 +24,10 @@ class BlobDetector
       sensor_msgs::Image msg;
       cv_bridge::CvImage bridge;
 
-      bridge = cv_bridge::CvImage(std_msgs::Header(), sensor_msgs::image_encodings::RGB8, src);
+      bridge = cv_bridge::CvImage(std_msgs::Header(), sensor_msgs::image_encodings::BGR8, src);
       bridge.toImageMsg(msg);
       pub.publish(msg);
   }
-
 
 
 public:
@@ -86,16 +80,8 @@ public:
         &BlobDetector::detect, this);
       image_pub_ = it_.advertise("/blobDetector/blob", 1);
 
-      // create GUI window
-      cv::namedWindow(OPENCV_WINDOW);
+
   }
-
-  ~BlobDetector()
-  {
-      cv::destroyWindow(OPENCV_WINDOW);
-  }
-
-
 
   void detect(const sensor_msgs::ImageConstPtr& msg)
   {
@@ -117,6 +103,7 @@ public:
 
       // init blob detector with parameters from ROS parameter server
       cv::Ptr<cv::SimpleBlobDetector> bd = cv::SimpleBlobDetector::create(params);
+
       // store keypoints in vector
       std::vector<cv::KeyPoint> keypoints;
 
@@ -124,11 +111,7 @@ public:
       bd->detect(cv_ptr->image, keypoints);
       cv::drawKeypoints(cv_ptr->image, keypoints, dst, cv::Scalar(0,255,0), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 
-      // Update GUI Window
-      cv::imshow(OPENCV_WINDOW, dst);
-      cv::waitKey(3);
-
-      // Publish the edge map
+      // Publish result image
       publishImage(dst, image_pub_);
   }
 };
@@ -136,6 +119,7 @@ public:
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "edge_detector");
+    ROS_INFO("blob detector 
     BlobDetector cd;
     ros::spin();
     return 0;

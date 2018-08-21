@@ -43,38 +43,50 @@ public:
       // get image input topic name from ROS parameter server
       nh_.getParam("image_topic_name", input_topic_name);
      
-      // get Blob Parameters from ROS parameter server
+      //########## get Blob Parameters from ROS parameter server
+      // thresholds
       nh_.param("/thresholdStep", params.thresholdStep, (float)10);
       nh_.param("/minThreshold", params.minThreshold, (float)10);
       nh_.param("/maxThreshold", params.maxThreshold, (float)220);
       nh_.param("/minRepeatability", tmp_minRepeatability, 2);
       nh_.param("/minDistBetweenBlobs", params.minDistBetweenBlobs, (float)10);
+      
+      // filter by color: 0 = dark; 255 = light
       nh_.param("/filterByColor", params.filterByColor, false);
       nh_.param("/blobColor", tmp_blobColor, 0);
+
+      // filter by area: set minArea large enough to eliminate noise
       nh_.param("/filterByArea", params.filterByArea, false);
       nh_.param("/minArea", params.minArea, (float)25);
-      nh_.param("/maxArea", params.maxArea, (float)(320*240));
+      nh_.param("/maxArea", params.maxArea, (float)20000);
+
+      // filter by circularity: circularity = 4*pi*Area/(perimeter^2)
       nh_.param("/filterByCircularity", params.filterByCircularity, false);
       nh_.param("/minCircularity", params.minCircularity, 0.6f);
       nh_.param("/maxCircularity", params.maxCircularity, (float)1e37);
+
+      // filter by inertia: area distribution around rotational axis
+      // low moment of inertia -> 1; high moment of inertia -> 0
       nh_.param("/filterByInertia", params.filterByInertia, false);
       nh_.param("/minInertiaRatio", params.minInertiaRatio, 0.1f);
       nh_.param("/maxInertiaRatio", params.maxInertiaRatio, (float)1e37);
+
+      // filter by convexity
       nh_.param("/filterByConvexity", params.filterByConvexity, false);
       nh_.param("/minConvexity", params.minConvexity, 0.95f);
       nh_.param("/maxConvexity", params.maxConvexity, (float)1e37);
       
+      // cast temporary variables to correct parameter format
       params.blobColor = (uchar)tmp_blobColor;
       params.minRepeatability = (ulong)tmp_minRepeatability;
-
+      //########### end: Blob Parameters
 
       // set up subscriber and publisher
       image_sub_ = it_.subscribe(input_topic_name, 1,
         &BlobDetector::detect, this);
       image_pub_ = it_.advertise("/blobDetector/blob", 1);
-    
 
-
+      // create GUI window
       cv::namedWindow(OPENCV_WINDOW);
   }
 
@@ -100,29 +112,18 @@ public:
 
 
 
-      // declare CV Mat objects
-      cv::Mat dst;//, result(cv_ptr->image.rows, cv_ptr->image.cols, CV_8UC3);
+      // destination matrix to store result
+      cv::Mat dst;
 
       // init blob detector with parameters from ROS parameter server
       cv::Ptr<cv::SimpleBlobDetector> bd = cv::SimpleBlobDetector::create(params);
       // store keypoints in vector
       std::vector<cv::KeyPoint> keypoints;
 
-      // detect keypoints
+      // detect keypoints and draw green circle in same size as keypoint
       bd->detect(cv_ptr->image, keypoints);
-      cv::drawKeypoints(cv_ptr->image, keypoints, dst, cv::Scalar(0,0,255), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+      cv::drawKeypoints(cv_ptr->image, keypoints, dst, cv::Scalar(0,255,0), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 
-
-      // color palette
-      /*std::vector<cv::Vec3b> palette;
-      for (int i = 0; i < 65536; i++)
-          palette.push_back(cv::Vec3b((uchar)rand(), (uchar)rand(), (uchar)rand()));
-
-      int i = 0;
-      // draw large circles around blobs
-      for (std::vector<cv::KeyPoint>::iterator k = keypoints.begin(); k != keypoints.end(); ++k, ++i)
-      cv::circle(dst, k->pt, (int)k->size, palette[i % 65536]);
-      */
       // Update GUI Window
       cv::imshow(OPENCV_WINDOW, dst);
       cv::waitKey(3);

@@ -29,7 +29,7 @@ class CannyDetector
       cv_bridge::CvImage bridge;
 
       if (color == true)
-          bridge = cv_bridge::CvImage(std_msgs::Header(), sensor_msgs::image_encodings::RGB8, src);
+          bridge = cv_bridge::CvImage(std_msgs::Header(), sensor_msgs::image_encodings::BGR8, src);
       else
           bridge = cv_bridge::CvImage(std_msgs::Header(), sensor_msgs::image_encodings::MONO8, src);
       bridge.toImageMsg(msg);
@@ -81,7 +81,7 @@ public:
       cv_bridge::CvImagePtr cv_ptr;
       try
       {
-        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::RGB8);
+        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
       }
       catch (cv_bridge::Exception& e)
       {

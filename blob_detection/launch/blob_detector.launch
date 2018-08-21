@@ -1,8 +1,10 @@
 <launch>
   <arg name="image_topic_name_right" default="image_raw"/>
   <arg name="image_topic_name_left" default="image_raw"/>
+  
 
-  <rosparam command="load" file="$(find blob_detection)/config/blob_parameters.yaml"/>
+  <arg name="params" default="circular"/>
+  <rosparam command="load" file="$(find blob_detection)/config/$(arg params).yaml"/>
 
   <group ns="/stereo/right/">
     <param name="image_topic_name" value="$(arg image_topic_name_right)"/>

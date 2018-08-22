@@ -6,6 +6,7 @@
 #include <opencv2/features2d.hpp>
 #include <iostream>
 #include <vector>
+#include <std_msgs/Float32.h>
 
 
 class BlobDetector
@@ -14,6 +15,7 @@ class BlobDetector
   image_transport::ImageTransport it_;
   image_transport::Subscriber image_sub_;
   image_transport::Publisher image_pub_;
+  ros::Publisher time_pub_;
   std::string input_topic_name;
   cv::SimpleBlobDetector::Params params;
   // temporal variables to store parameters that need to be casted lateron
@@ -21,17 +23,28 @@ class BlobDetector
   int tmp_blobColor;
   ros::Time time_begin;
 
-  void publishImage(cv::Mat src, image_transport::Publisher pub, ros::Time begin) {
+  void publishImage(cv::Mat src, image_transport::Publisher pub, ros::Publisher timepub, ros::Time begin) {
       sensor_msgs::Image msg;
       cv_bridge::CvImage bridge;
 
       // fill msg header with timestamp (from beginning of callback)
       msg.header.stamp = time_begin;
+
       bridge = cv_bridge::CvImage(std_msgs::Header(), sensor_msgs::image_encodings::BGR8, src);
       bridge.toImageMsg(msg);
-      pub.publish(msg);
 
+      ros::Time time_end = ros::Time::now();
+
+      pub.publish(msg);
+      publishTime(begin, time_end, timepub);
       }
+
+  void publishTime (ros::Time begin, ros::Time end, ros::Publisher pub) {
+      std_msgs::Float32 msg;
+      ros::Duration elapsed = end - begin;
+      msg.data = elapsed.toSec();
+      pub.publish(msg);
+  }
 
 public:
   BlobDetector()
@@ -82,6 +95,8 @@ public:
       image_sub_ = it_.subscribe(input_topic_name, 1,
         &BlobDetector::detect, this);
       image_pub_ = it_.advertise("/blobDetector/blob", 1);
+      time_pub_ = nh_.advertise<std_msgs::Float32>("/blobDuration", 1);
+
 
       ROS_DEBUG_STREAM("Blob detection for " << input_topic_name <<  " running.\n");
 
@@ -120,7 +135,7 @@ public:
       cv::drawKeypoints(cv_ptr->image, keypoints, dst, cv::Scalar(0,255,0), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 
       // Publish result image
-      publishImage(dst, image_pub_, time_begin);
+      publishImage(dst, image_pub_, time_pub_, time_begin);
   }
 };
 

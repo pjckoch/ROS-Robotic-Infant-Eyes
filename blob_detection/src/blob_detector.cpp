@@ -27,14 +27,14 @@ class BlobDetector
   int uLowH, uLowV, uLowS, uHighH, uHighV, uHighS;
 
 
-  void publishImage(cv::Mat src, image_transport::Publisher pub, ros::Publisher timepub) {
+  void publishImage(cv::Mat src, image_transport::Publisher pub, ros::Time timestamp) {
       sensor_msgs::Image msg;
       cv_bridge::CvImage bridge;
 
       bridge = cv_bridge::CvImage(std_msgs::Header(), sensor_msgs::image_encodings::BGR8, src);
       bridge.toImageMsg(msg);
-      // fill msg header with timestamp
-      msg.header.stamp = ros::Time::now();
+      // fill msg header with timestamp of received message to enable synching lateron
+      msg.header.stamp = timestamp;
       pub.publish(msg);
   }
 
@@ -165,7 +165,7 @@ public:
       cv::drawKeypoints(hue_img, keypoints, dst, cv::Scalar(0,255,0), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 
       // Publish result image
-      publishImage(dst, image_pub_, time_pub_);
+      publishImage(dst, image_pub_, msg->header.stamp);
 
       // timing analysis: stop
       ros::Time time_end = ros::Time::now();

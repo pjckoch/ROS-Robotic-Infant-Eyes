@@ -1,0 +1,9 @@
+# Set color to filter for: BLUE
+
+# threshold hue range
+lLowH: 95
+lLowS: 100 
+lLowV: 100 
+lHighH: 145
+lHighS: 255 
+lHighV: 255 

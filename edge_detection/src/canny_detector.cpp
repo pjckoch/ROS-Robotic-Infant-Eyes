@@ -2,13 +2,9 @@
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
-//#include <opencv2/imgproc/imgproc.hpp>
-//#include <opencv2/highgui/highgui.hpp>
 #include <iostream>
+#include <std_msgs/Float32.h>
 
-#include <ros/console.h>
-
-//static const std::string OPENCV_WINDOW = "Canny Edge Map";
 
 class CannyDetector
 {
@@ -17,6 +13,8 @@ class CannyDetector
   image_transport::Subscriber image_sub_;
   image_transport::Publisher edge_pub_;
   image_transport::Publisher gray_pub_;
+  image_transport::Publisher col_pub_;
+  ros::Publisher time_pub_;
   std::string input_topic_name;
   const int ratio = 3;
   const int kernel_size = 3;
@@ -24,16 +22,28 @@ class CannyDetector
   const int default_lowerThreshold = 50;
   int upperThreshold = ratio*default_lowerThreshold;
 
+
   // publish CV images as ROS sensor messages
-  void publishImage(cv::Mat src, image_transport::Publisher pub) {
+  void publishImage(cv::Mat src, image_transport::Publisher pub, bool color, ros::Time timestamp) {
       sensor_msgs::Image msg;
       cv_bridge::CvImage bridge;
 
-      bridge = cv_bridge::CvImage(std_msgs::Header(), sensor_msgs::image_encodings::MONO8, src);
+      msg.header.stamp = timestamp;
+
+      if (color == true)
+          bridge = cv_bridge::CvImage(std_msgs::Header(), sensor_msgs::image_encodings::BGR8, src);
+      else
+          bridge = cv_bridge::CvImage(std_msgs::Header(), sensor_msgs::image_encodings::MONO8, src);
       bridge.toImageMsg(msg);
       pub.publish(msg);
   }
 
+  void publishTime(ros::Time begin, ros::Time end, ros::Publisher pub) {
+      std_msgs::Float32 msg;
+      ros::Duration elapsed = end - begin;
+      msg.data = elapsed.toSec();
+      pub.publish(msg);
+  }
 
 public:
   CannyDetector()
@@ -47,7 +57,7 @@ public:
       if (lowerThreshold >= 0){
           upperThreshold = ratio*lowerThreshold;
           std::cout << std::endl << std::endl
-          << "Lower threshold =  " << lowerThreshold
+          << "Lower threshold = " << lowerThreshold
           << "; Upper threshold = " << upperThreshold
           << std::endl << std::endl;
       }
@@ -62,18 +72,18 @@ public:
       image_sub_ = it_.subscribe(input_topic_name, 1,
         &CannyDetector::detect, this);
       edge_pub_ = it_.advertise("/edgeDetector/edge_map", 1);
-      gray_pub_ = it_.advertise("/edgeDetector/image_edge_mask", 1);
-    
-      //cv::namedWindow(OPENCV_WINDOW);
+      gray_pub_ = it_.advertise("/edgeDetector/gray_edges", 1);
+      col_pub_ = it_.advertise("/edgeDetector/color_edges", 1);
+      time_pub_ = nh_.advertise<std_msgs::Float32>("edgeDuration", 1);
+
   }
 
-  //~CannyDetector()
-  //{
-  //    cv::destroyWindow(OPENCV_WINDOW);
-  //}
 
   void detect(const sensor_msgs::ImageConstPtr& msg)
   {
+      // timing analysis: start
+      ros::Time time_begin = ros::Time::now();
+
       cv_bridge::CvImagePtr cv_ptr;
       try
       {
@@ -86,11 +96,10 @@ public:
       }
 
       // declare CV Mat objects
-      cv::Mat gray;
-      cv::Mat dst, edges;
+      cv::Mat gray, dst_gray, edges, edges_color;
 
       // convert to gray image
-      cvtColor(cv_ptr->image, gray, CV_BGR2GRAY); 
+      cv::cvtColor(cv_ptr->image, gray, CV_BGR2GRAY); 
 
       // Reduce noise
       cv::GaussianBlur(gray, edges, cv::Size(3,3), 0, 0);
@@ -98,16 +107,20 @@ public:
       // Canny edge detector
       cv::Canny(edges, edges, lowerThreshold, upperThreshold, kernel_size);
 
-      // Overwrite original img with masked gray image
-      gray.copyTo(dst, edges);
+      // mask gray image with edge map and copy to dst_gray
+      gray.copyTo(dst_gray, edges);
 
-      // Update GUI Window
-      //cv::imshow(OPENCV_WINDOW, dst);
-      //cv::waitKey(3);
+      // mask original color image with edge map and copy to dst_color
+      cv::cvtColor(edges, edges_color, CV_GRAY2BGR);
 
       // Publish the edge map and the masked gray-scale image
-      publishImage(edges, edge_pub_);
-      publishImage(dst, gray_pub_);
+      publishImage(edges, edge_pub_, false, time_begin);
+      publishImage(dst_gray, gray_pub_, false, time_begin);
+      publishImage(edges_color+cv_ptr->image, col_pub_, true, time_begin);
+
+      // timing analysis: stop
+      ros::Time time_end = ros::Time::now();
+      publishTime(time_begin, time_end, time_pub_);
   }
 };
 

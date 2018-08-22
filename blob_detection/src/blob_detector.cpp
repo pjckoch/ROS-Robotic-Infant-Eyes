@@ -4,8 +4,10 @@
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
 #include <opencv2/features2d.hpp>
+#include <opencv2/core.hpp>
 #include <iostream>
 #include <vector>
+#include <std_msgs/Float32.h>
 
 
 class BlobDetector
@@ -14,24 +16,35 @@ class BlobDetector
   image_transport::ImageTransport it_;
   image_transport::Subscriber image_sub_;
   image_transport::Publisher image_pub_;
+  ros::Publisher time_pub_;
   std::string input_topic_name;
   cv::SimpleBlobDetector::Params params;
   // temporal variables to store parameters that need to be casted lateron
-  int tmp_minRepeatability;
-  int tmp_blobColor;
-  ros::Time time_begin;
+  int tmp_minRepeatability, tmp_blobColor;
+  // color hue ranges for HSV thresholding
+  int lLowH, lLowV, lLowS, lHighH, lHighV, lHighS;
+  bool secondRange;
+  int uLowH, uLowV, uLowS, uHighH, uHighV, uHighS;
 
-  void publishImage(cv::Mat src, image_transport::Publisher pub, ros::Time begin) {
+
+  void publishImage(cv::Mat src, image_transport::Publisher pub, ros::Publisher timepub, ros::Time timestamp) {
       sensor_msgs::Image msg;
       cv_bridge::CvImage bridge;
 
       // fill msg header with timestamp (from beginning of callback)
-      msg.header.stamp = time_begin;
+      msg.header.stamp = timestamp;
+
       bridge = cv_bridge::CvImage(std_msgs::Header(), sensor_msgs::image_encodings::BGR8, src);
       bridge.toImageMsg(msg);
       pub.publish(msg);
+  }
 
-      }
+  void publishTime (ros::Time begin, ros::Time end, ros::Publisher pub) {
+      std_msgs::Float32 msg;
+      ros::Duration elapsed = end - begin;
+      msg.data = elapsed.toSec();
+      pub.publish(msg);
+  }
 
 public:
   BlobDetector()
@@ -39,7 +52,24 @@ public:
   {
       // get image input topic name from ROS parameter server
       nh_.getParam("image_topic_name", input_topic_name);
-     
+    
+      // get HSV-thresholds from ROS parameter server
+      nh_.param("/lLowH", lLowH, 0);
+      nh_.param("/lLowS", lLowS, 0);
+      nh_.param("/lLowV", lLowV, 0);
+      nh_.param("/lHighH", lHighH, 180);
+      nh_.param("/lHighS", lHighS, 255);
+      nh_.param("/lHighV", lHighV, 255);
+      
+      // if filtering for red or for two colors, a second range is needed
+      nh_.param("/secondRange", secondRange, false); 
+      nh_.param("/uLowH", uLowH, 0);
+      nh_.param("/uLowS", uLowS, 0);
+      nh_.param("/uLowV", uLowV, 0);
+      nh_.param("/uHighH", uHighH, 180);
+      nh_.param("/uHighS", uHighS, 255);
+      nh_.param("/uHighV", uHighV, 255);
+
       //########## get Blob Parameters from ROS parameter server
       // thresholds
       nh_.param("/thresholdStep", params.thresholdStep, (float)10);
@@ -82,6 +112,8 @@ public:
       image_sub_ = it_.subscribe(input_topic_name, 1,
         &BlobDetector::detect, this);
       image_pub_ = it_.advertise("/blobDetector/blob", 1);
+      time_pub_ = nh_.advertise<std_msgs::Float32>("blobDuration", 1);
+
 
       ROS_DEBUG_STREAM("Blob detection for " << input_topic_name <<  " running.\n");
 
@@ -89,8 +121,8 @@ public:
 
   void detect(const sensor_msgs::ImageConstPtr& msg)
   {
-      // obtain time to fill it in header later on
-      time_begin = ros::Time::now();
+      // timing analysis: start
+      ros::Time time_begin = ros::Time::now();
 
       // convert sensor message to CV image
       cv_bridge::CvImagePtr cv_ptr;
@@ -105,9 +137,23 @@ public:
       }
 
 
+      // CV matrices
+      cv::Mat src_HSV, dst, lower_hue_range, upper_hue_range, hue_img;
 
-      // destination matrix to store result
-      cv::Mat dst;
+      // Convert to HSV as it delivers better color separation
+      cv::cvtColor(cv_ptr->image, src_HSV, cv::COLOR_BGR2HSV);
+
+      // Threshold images, filter for red pixels
+      cv::inRange(src_HSV, cv::Scalar(lLowH, lLowS, lLowV), cv::Scalar(lHighH, lHighS, lHighV), lower_hue_range);
+      cv::inRange(src_HSV, cv::Scalar(uLowH, uLowS, uLowV), cv::Scalar(uHighH, uHighS, uHighV), upper_hue_range);
+
+      // Combine thresholds if there are two ranges
+      if (secondRange)
+          cv::addWeighted(lower_hue_range, 1.0, upper_hue_range, 1.0, 0.0, hue_img);
+      else
+          hue_img = lower_hue_range;
+      // Blur to avoid false positives
+      cv::GaussianBlur(hue_img, hue_img, cv::Size(3, 3), 2, 2);
 
       // init blob detector with parameters from ROS parameter server
       cv::Ptr<cv::SimpleBlobDetector> bd = cv::SimpleBlobDetector::create(params);
@@ -116,11 +162,15 @@ public:
       std::vector<cv::KeyPoint> keypoints;
 
       // detect keypoints and draw green circle in same size as keypoint
-      bd->detect(cv_ptr->image, keypoints);
-      cv::drawKeypoints(cv_ptr->image, keypoints, dst, cv::Scalar(0,255,0), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+      bd->detect(hue_img, keypoints);
+      cv::drawKeypoints(hue_img, keypoints, dst, cv::Scalar(0,255,0), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 
       // Publish result image
-      publishImage(dst, image_pub_, time_begin);
+      publishImage(dst, image_pub_, time_pub_, time_begin);
+
+      // timing analysis: stop
+      ros::Time time_end = ros::Time::now();
+      publishTime(time_begin, time_end, time_pub_);
   }
 };
 

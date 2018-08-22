@@ -1,0 +1,9 @@
+# Set color to filter for: GREEN
+
+# threshold hue range
+lLowH: 40
+lLowS: 100
+lLowV: 100 
+lHighH: 85
+lHighS: 255 
+lHighV: 255

@@ -1,0 +1,19 @@
+##### Define Color to filter for: RED
+
+# lower threshold for hue range
+lLowH: 0
+lLowS: 100
+lLowV: 100
+lHighH: 10
+lHighS: 255
+lHighV: 255
+
+secondRange: true
+
+# upper threshold for hue range
+uLowH: 160
+uLowS: 100
+uLowV: 100
+uHighH: 179
+uHighS: 255
+uHighV: 255

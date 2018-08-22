@@ -28,13 +28,14 @@ class CannyDetector
       sensor_msgs::Image msg;
       cv_bridge::CvImage bridge;
 
-      msg.header.stamp = timestamp;
-
       if (color == true)
           bridge = cv_bridge::CvImage(std_msgs::Header(), sensor_msgs::image_encodings::BGR8, src);
       else
           bridge = cv_bridge::CvImage(std_msgs::Header(), sensor_msgs::image_encodings::MONO8, src);
       bridge.toImageMsg(msg);
+      
+      // fill message header with timestamp of received message for synchronization later
+      msg.header.stamp = timestamp;
       pub.publish(msg);
   }
 
@@ -116,7 +117,7 @@ public:
       // Publish the edge map and the masked gray-scale image
       publishImage(edges, edge_pub_, false, time_begin);
       publishImage(dst_gray, gray_pub_, false, time_begin);
-      publishImage(edges_color+cv_ptr->image, col_pub_, true, time_begin);
+      publishImage(edges_color+cv_ptr->image, col_pub_, true, msg->header.stamp);
 
       // timing analysis: stop
       ros::Time time_end = ros::Time::now();

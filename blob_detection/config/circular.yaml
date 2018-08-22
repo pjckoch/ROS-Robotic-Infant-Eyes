@@ -1,4 +1,4 @@
 filterByCircularity: true
-minCircularity: 0.74
+minCircularity: 0.6
 filterByArea: true
 minArea: 200

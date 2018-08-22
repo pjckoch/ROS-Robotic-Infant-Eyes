@@ -27,19 +27,18 @@ class BlobDetector
   int uLowH, uLowV, uLowS, uHighH, uHighV, uHighS;
 
 
-  void publishImage(cv::Mat src, image_transport::Publisher pub, ros::Publisher timepub, ros::Time timestamp) {
+  void publishImage(cv::Mat src, image_transport::Publisher pub, ros::Publisher timepub) {
       sensor_msgs::Image msg;
       cv_bridge::CvImage bridge;
 
-      // fill msg header with timestamp (from beginning of callback)
-      msg.header.stamp = timestamp;
-
       bridge = cv_bridge::CvImage(std_msgs::Header(), sensor_msgs::image_encodings::BGR8, src);
       bridge.toImageMsg(msg);
+      // fill msg header with timestamp
+      msg.header.stamp = ros::Time::now();
       pub.publish(msg);
   }
 
-  void publishTime (ros::Time begin, ros::Time end, ros::Publisher pub) {
+  void publishDuration (ros::Time begin, ros::Time end, ros::Publisher pub) {
       std_msgs::Float32 msg;
       ros::Duration elapsed = end - begin;
       msg.data = elapsed.toSec();
@@ -166,11 +165,11 @@ public:
       cv::drawKeypoints(hue_img, keypoints, dst, cv::Scalar(0,255,0), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 
       // Publish result image
-      publishImage(dst, image_pub_, time_pub_, time_begin);
+      publishImage(dst, image_pub_, time_pub_);
 
       // timing analysis: stop
       ros::Time time_end = ros::Time::now();
-      publishTime(time_begin, time_end, time_pub_);
+      publishDuration(time_begin, time_end, time_pub_);
   }
 };
 

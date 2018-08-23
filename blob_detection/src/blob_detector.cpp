@@ -16,8 +16,8 @@ class BlobDetector
   image_transport::ImageTransport it_;
   image_transport::Subscriber image_sub_;
   image_transport::Publisher image_pub_;
-  ros::Publisher time_pub_;
   std::string input_topic_name;
+  std::string frame_id;
   cv::SimpleBlobDetector::Params params;
   // temporal variables to store parameters that need to be casted lateron
   int tmp_minRepeatability, tmp_blobColor;
@@ -27,21 +27,15 @@ class BlobDetector
   int uLowH, uLowV, uLowS, uHighH, uHighV, uHighS;
 
 
-  void publishImage(cv::Mat src, image_transport::Publisher pub, ros::Time timestamp) {
+  void publishImage(cv::Mat src, image_transport::Publisher pub) {
       sensor_msgs::Image msg;
       cv_bridge::CvImage bridge;
 
       bridge = cv_bridge::CvImage(std_msgs::Header(), sensor_msgs::image_encodings::BGR8, src);
       bridge.toImageMsg(msg);
-      // fill msg header with timestamp of received message to enable synching lateron
-      msg.header.stamp = timestamp;
-      pub.publish(msg);
-  }
-
-  void publishDuration (ros::Time begin, ros::Time end, ros::Publisher pub) {
-      std_msgs::Float32 msg;
-      ros::Duration elapsed = end - begin;
-      msg.data = elapsed.toSec();
+      // fill msg header with timestamp and frame id
+      msg.header.frame_id = frame_id;
+      msg.header.stamp = ros::Time::now();
       pub.publish(msg);
   }
 
@@ -51,7 +45,9 @@ public:
   {
       // get image input topic name from ROS parameter server
       nh_.getParam("image_topic_name", input_topic_name);
-    
+   
+      // get frame ID for message header
+      nh_.getParam("/frame_id", frame_id); 
       // get HSV-thresholds from ROS parameter server
       nh_.param("/lLowH", lLowH, 0);
       nh_.param("/lLowS", lLowS, 0);
@@ -111,8 +107,6 @@ public:
       image_sub_ = it_.subscribe(input_topic_name, 1,
         &BlobDetector::detect, this);
       image_pub_ = it_.advertise("/blobDetector/blob", 1);
-      time_pub_ = nh_.advertise<std_msgs::Float32>("blobDuration", 1);
-
 
       ROS_DEBUG_STREAM("Blob detection for " << input_topic_name <<  " running.\n");
 
@@ -120,9 +114,6 @@ public:
 
   void detect(const sensor_msgs::ImageConstPtr& msg)
   {
-      // timing analysis: start
-      ros::Time time_begin = ros::Time::now();
-
       // convert sensor message to CV image
       cv_bridge::CvImagePtr cv_ptr;
       try
@@ -165,11 +156,7 @@ public:
       cv::drawKeypoints(hue_img, keypoints, dst, cv::Scalar(0,255,0), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 
       // Publish result image
-      publishImage(dst, image_pub_, msg->header.stamp);
-
-      // timing analysis: stop
-      ros::Time time_end = ros::Time::now();
-      publishDuration(time_begin, time_end, time_pub_);
+      publishImage(dst, image_pub_);
   }
 };
 

@@ -13,6 +13,7 @@
   <group ns="/stereo/right/">
     <param name="image_topic_name" value="$(arg image_topic_name_right)"/>
     <node name="blob_detector_right" pkg="blob_detection" type="blob_detector" output="screen">
+      <param name="frame_id" value="right_blob"/>
       <remap from="/blobDetector/blob" to="blob"/>
     </node>
   </group>
@@ -21,6 +22,7 @@
   <group ns="/stereo/left/">
     <param name="image_topic_name" value="$(arg image_topic_name_left)"/>
     <node name="blob_detector_left" pkg="blob_detection" type="blob_detector" output="screen">
+      <param name="frame_id" value="blob_blob"/>
       <remap from="/blobDetector/blob" to="blob"/>
     </node>
   </group>

@@ -24,7 +24,7 @@ class CannyDetector
 
 
   // publish CV images as ROS sensor messages
-  void publishImage(cv::Mat src, image_transport::Publisher pub, bool color, ros::Time stamp_begin, ros::Publisher time_pub_) {
+  void publishImage(cv::Mat src, image_transport::Publisher pub, bool color, ros::Time stamp_begin, ros::Publisher timepub) {
       sensor_msgs::Image msg;
       cv_bridge::CvImage bridge;
 
@@ -37,6 +37,7 @@ class CannyDetector
 
       msg.header.stamp = ros::Time::now();
       pub.publish(msg);
+      publishDuration(stamp_begin, msg.header.stamp, timepub);
   }
 
     void publishDuration(ros::Time begin, ros::Time end, ros::Publisher pub) {

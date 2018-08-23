@@ -1,6 +1,5 @@
 #include <ros/ros.h>
 #include <ros/console.h>
-#include <timing_analysis/publish_duration.h>
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
@@ -28,28 +27,26 @@ class BlobDetector
   int uLowH, uLowV, uLowS, uHighH, uHighV, uHighS;
 
 
-<<<<<<< Updated upstream
-  void publishImage(cv::Mat src, image_transport::Publisher pub, ros::Publisher timepub, ros::Time timestamp) {
-=======
-  void publishImage(cv::Mat src, image_transport::Publisher pub, ros::Time stamp_begin) {
->>>>>>> Stashed changes
+  void publishImage(cv::Mat src, image_transport::Publisher pub, ros::Time stamp_begin, ros::Publisher timepub) {
       sensor_msgs::Image msg;
       cv_bridge::CvImage bridge;
 
-      // fill msg header with timestamp (from beginning of callback)
-      msg.header.stamp = timestamp;
-
       bridge = cv_bridge::CvImage(std_msgs::Header(), sensor_msgs::image_encodings::BGR8, src);
       bridge.toImageMsg(msg);
+      
+      // fill message header with timestamp
+      msg.header.stamp = ros::Time::now();
+
       pub.publish(msg);
+      publishDuration(stamp_begin, msg.header.stamp, timepub);
   }
 
-  void publishTime (ros::Time begin, ros::Time end, ros::Publisher pub) {
+  void publishDuration(ros::Time begin, ros::Time end, ros::Publisher pub) {
+      // timing analysis
       std_msgs::Float32 msg;
       ros::Duration elapsed = end - begin;
       msg.data = elapsed.toSec();
       pub.publish(msg);
-      publishDuration(stamp_begin, msg.header.stamp, time_pub_);
   }
 
 public:
@@ -118,12 +115,8 @@ public:
       image_sub_ = it_.subscribe(input_topic_name, 1,
         &BlobDetector::detect, this);
       image_pub_ = it_.advertise("/blobDetector/blob", 1);
-<<<<<<< Updated upstream
       time_pub_ = nh_.advertise<std_msgs::Float32>("blobDuration", 1);
 
-=======
-      time_pub_ = nh_.advertise("blobDuration", 1);
->>>>>>> Stashed changes
 
       ROS_DEBUG_STREAM("Blob detection for " << input_topic_name <<  " running.\n");
 
@@ -176,15 +169,7 @@ public:
       cv::drawKeypoints(hue_img, keypoints, dst, cv::Scalar(0,255,0), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 
       // Publish result image
-<<<<<<< Updated upstream
-      publishImage(dst, image_pub_, time_pub_, time_begin);
-
-      // timing analysis: stop
-      ros::Time time_end = ros::Time::now();
-      publishTime(time_begin, time_end, time_pub_);
-=======
-      publishImage(dst, image_pub_, msg->header.stamp);
->>>>>>> Stashed changes
+      publishImage(dst, image_pub_, msg->header.stamp, time_pub_);
   }
 };
 

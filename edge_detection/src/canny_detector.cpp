@@ -24,26 +24,30 @@ class CannyDetector
 
 
   // publish CV images as ROS sensor messages
-  void publishImage(cv::Mat src, image_transport::Publisher pub, bool color, ros::Time timestamp) {
+  void publishImage(cv::Mat src, image_transport::Publisher pub, bool color, ros::Time stamp_begin, ros::Publisher time_pub_) {
       sensor_msgs::Image msg;
       cv_bridge::CvImage bridge;
 
-      msg.header.stamp = timestamp;
 
       if (color == true)
           bridge = cv_bridge::CvImage(std_msgs::Header(), sensor_msgs::image_encodings::BGR8, src);
       else
           bridge = cv_bridge::CvImage(std_msgs::Header(), sensor_msgs::image_encodings::MONO8, src);
       bridge.toImageMsg(msg);
+
+      msg.header.stamp = ros::Time::now();
       pub.publish(msg);
   }
 
-  void publishTime(ros::Time begin, ros::Time end, ros::Publisher pub) {
+    void publishDuration(ros::Time begin, ros::Time end, ros::Publisher pub) {
+      // timing analysis
       std_msgs::Float32 msg;
       ros::Duration elapsed = end - begin;
       msg.data = elapsed.toSec();
       pub.publish(msg);
   }
+
+
 
 public:
   CannyDetector()
@@ -81,8 +85,6 @@ public:
 
   void detect(const sensor_msgs::ImageConstPtr& msg)
   {
-      // timing analysis: start
-      ros::Time time_begin = ros::Time::now();
 
       cv_bridge::CvImagePtr cv_ptr;
       try
@@ -114,13 +116,8 @@ public:
       cv::cvtColor(edges, edges_color, CV_GRAY2BGR);
 
       // Publish the edge map and the masked gray-scale image
-      publishImage(edges, edge_pub_, false, time_begin);
-      publishImage(dst_gray, gray_pub_, false, time_begin);
-      publishImage(edges_color+cv_ptr->image, col_pub_, true, time_begin);
+      publishImage(edges, edge_pub_, false, msg->header.stamp, time_pub_);
 
-      // timing analysis: stop
-      ros::Time time_end = ros::Time::now();
-      publishTime(time_begin, time_end, time_pub_);
   }
 };
 

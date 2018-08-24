@@ -2,5 +2,6 @@ learning_image_transport/
 usb_cam/
 image_pipeline/
 image_transport_tutorial
-CMakeLists.txt
+/CMakeLists.txt
 timing_analysis/
+tracetools/

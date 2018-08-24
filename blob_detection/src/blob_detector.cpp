@@ -19,6 +19,7 @@ class BlobDetector
   image_transport::Publisher image_pub_;
   ros::Publisher time_pub_;
   std::string input_topic_name;
+  std::string frame_id;
   cv::SimpleBlobDetector::Params params;
   // temporal variables to store parameters that need to be casted lateron
   int tmp_minRepeatability, tmp_blobColor;
@@ -40,6 +41,9 @@ class BlobDetector
 
       // timing_analysis: end
       ros::Time callback_end = ros::Time::now();
+      // fill msg header with frame id
+      msg.header.frame_id = frame_id;
+
 
       image_pub_.publish(msg);
       publishDuration(src_header.stamp, callback_begin, callback_end, time_pub_);
@@ -53,7 +57,9 @@ public:
   {
       // get image input topic name from ROS parameter server
       nh_.getParam("image_topic_name", input_topic_name);
-    
+   
+      // get frame ID for message header
+      nh_.getParam("/frame_id", frame_id); 
       // get HSV-thresholds from ROS parameter server
       nh_.param("/lLowH", lLowH, 0);
       nh_.param("/lLowS", lLowS, 0);
@@ -114,7 +120,6 @@ public:
         &BlobDetector::detect, this);
       image_pub_ = it_.advertise("/blobDetector/blob", 1);
       time_pub_ = nh_.advertise<std_msgs::Float32MultiArray>("blobDuration", 10);
-
 
       ROS_DEBUG_STREAM("Blob detection for " << input_topic_name <<  " running.\n");
 

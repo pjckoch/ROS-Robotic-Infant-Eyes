@@ -17,6 +17,7 @@ class CannyDetector
   image_transport::Publisher col_pub_;
   ros::Publisher time_pub_;
   std::string input_topic_name;
+  std::string frame_id;
   const int ratio = 3;
   const int kernel_size = 3;
   int lowerThreshold;
@@ -28,8 +29,7 @@ class CannyDetector
   void publishImage(cv::Mat src, bool color, std_msgs::Header src_header, ros::Time callback_begin) {
       sensor_msgs::Image msg;
       cv_bridge::CvImage bridge;
-
-
+      
       if (color == true)
           bridge = cv_bridge::CvImage(std_msgs::Header(), sensor_msgs::image_encodings::BGR8, src);
       else
@@ -44,7 +44,7 @@ class CannyDetector
       edge_pub_.publish(msg);
       publishDuration(src_header.stamp, callback_begin, callback_end, time_pub_);
   }
-
+      
 
 public:
   CannyDetector()
@@ -52,6 +52,7 @@ public:
   {
       // obtain parameters from ROS parameter server
       nh_.getParam("image_topic_name", input_topic_name);
+      nh_.getParam("/frame_id", frame_id);
       nh_.getParam("/detection_lowerThreshold", lowerThreshold);
       
       // check whether given threshold is valid

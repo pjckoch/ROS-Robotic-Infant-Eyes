@@ -1,7 +1,7 @@
 <launch>
  
 <arg name="video_device_right" default="/dev/video0" />
-<arg name="video_device_left" default="/dev/video2" />
+<arg name="video_device_left" default="/dev/video1" />
  
 <arg name="image_width" default="320" />
 <arg name="image_height" default="240" />
@@ -26,7 +26,7 @@
 <arg name="left_camera_frame_id" default="left_camera" />
 <arg name="right_camera_frame_id" default="right_camera" />
  
-<arg name="framerate" default="30" />
+<arg name="framerate" default="15" />
  
 <arg name="camera_info" default="true" />
 <arg name="camera_info_path" default="stereo_camera_info" />

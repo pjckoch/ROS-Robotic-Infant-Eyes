@@ -1,5 +1,6 @@
 #include <ros/ros.h>
 #include <ros/console.h>
+#include <timing_analysis/timing_analysis.h>
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
@@ -7,8 +8,8 @@
 #include <opencv2/core.hpp>
 #include <iostream>
 #include <vector>
-#include <std_msgs/Float32.h>
-
+#include <std_msgs/Float32MultiArray.h>
+#include <std_msgs/Header.h>
 
 class BlobDetector
 {
@@ -27,27 +28,24 @@ class BlobDetector
   int uLowH, uLowV, uLowS, uHighH, uHighV, uHighS;
 
 
-  void publishImage(cv::Mat src, image_transport::Publisher pub, ros::Time stamp_begin, ros::Publisher timepub) {
+  void publishImage(cv::Mat src, std_msgs::Header src_header, ros::Time callback_begin) {
       sensor_msgs::Image msg;
       cv_bridge::CvImage bridge;
 
       bridge = cv_bridge::CvImage(std_msgs::Header(), sensor_msgs::image_encodings::BGR8, src);
       bridge.toImageMsg(msg);
       
-      // fill message header with timestamp
-      msg.header.stamp = ros::Time::now();
+      // copy message header of subscribed message
+      msg.header = src_header;
 
-      pub.publish(msg);
-      publishDuration(stamp_begin, msg.header.stamp, timepub);
+      // timing_analysis: end
+      ros::Time callback_end = ros::Time::now();
+
+      image_pub_.publish(msg);
+      publishDuration(src_header.stamp, callback_begin, callback_end, time_pub_);
   }
 
-  void publishDuration(ros::Time begin, ros::Time end, ros::Publisher pub) {
-      // timing analysis
-      std_msgs::Float32 msg;
-      ros::Duration elapsed = end - begin;
-      msg.data = elapsed.toSec();
-      pub.publish(msg);
-  }
+
 
 public:
   BlobDetector()
@@ -115,7 +113,7 @@ public:
       image_sub_ = it_.subscribe(input_topic_name, 1,
         &BlobDetector::detect, this);
       image_pub_ = it_.advertise("/blobDetector/blob", 1);
-      time_pub_ = nh_.advertise<std_msgs::Float32>("blobDuration", 1);
+      time_pub_ = nh_.advertise<std_msgs::Float32MultiArray>("blobDuration", 10);
 
 
       ROS_DEBUG_STREAM("Blob detection for " << input_topic_name <<  " running.\n");
@@ -125,7 +123,7 @@ public:
   void detect(const sensor_msgs::ImageConstPtr& msg)
   {
       // timing analysis: start
-      ros::Time time_begin = ros::Time::now();
+      ros::Time callback_begin = ros::Time::now();
 
       // convert sensor message to CV image
       cv_bridge::CvImagePtr cv_ptr;
@@ -137,6 +135,7 @@ public:
       {
         ROS_ERROR("cv_bridge exception: %s", e.what());
         return;
+
       }
 
 
@@ -169,7 +168,7 @@ public:
       cv::drawKeypoints(hue_img, keypoints, dst, cv::Scalar(0,255,0), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 
       // Publish result image
-      publishImage(dst, image_pub_, msg->header.stamp, time_pub_);
+      publishImage(dst, msg->header, callback_begin);
   }
 };
 

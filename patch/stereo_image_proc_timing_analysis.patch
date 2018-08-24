@@ -1,0 +1,145 @@
+diff --git a/stereo_image_proc/CMakeLists.txt b/stereo_image_proc/CMakeLists.txt
+index aed4a6d..3c34f78 100644
+--- a/stereo_image_proc/CMakeLists.txt
++++ b/stereo_image_proc/CMakeLists.txt
+@@ -1,7 +1,7 @@
+ cmake_minimum_required(VERSION 2.8)
+ project(stereo_image_proc)
+ 
+-find_package(catkin REQUIRED cv_bridge dynamic_reconfigure image_geometry image_proc image_transport message_filters nodelet sensor_msgs stereo_msgs)
++find_package(catkin REQUIRED timing_analysis cv_bridge dynamic_reconfigure image_geometry image_proc image_transport message_filters nodelet sensor_msgs stereo_msgs)
+ find_package(Boost REQUIRED COMPONENTS thread)
+ 
+ if(cv_bridge_VERSION VERSION_GREATER "1.12.0")
+diff --git a/stereo_image_proc/package.xml b/stereo_image_proc/package.xml
+index ec853e7..968e75b 100644
+--- a/stereo_image_proc/package.xml
++++ b/stereo_image_proc/package.xml
+@@ -27,6 +27,9 @@
+   <build_depend>nodelet</build_depend>
+   <build_depend>sensor_msgs</build_depend>
+   <build_depend>stereo_msgs</build_depend>
++  <build_depend>std_msgs</build_depend>
++  <build_depend>timing_analysis</build_depend>
++
+ 
+   <run_depend>cv_bridge</run_depend>
+   <run_depend>dynamic_reconfigure</run_depend>
+diff --git a/stereo_image_proc/src/nodelets/disparity.cpp b/stereo_image_proc/src/nodelets/disparity.cpp
+index 1c39f99..3a1c549 100644
+--- a/stereo_image_proc/src/nodelets/disparity.cpp
++++ b/stereo_image_proc/src/nodelets/disparity.cpp
+@@ -45,12 +45,15 @@
+ #include <message_filters/sync_policies/exact_time.h>
+ #include <message_filters/sync_policies/approximate_time.h>
+ 
++#include <timing_analysis/timing_analysis.h>
++
+ #include <image_geometry/stereo_camera_model.h>
+ #include <opencv2/calib3d/calib3d.hpp>
+ #include <cv_bridge/cv_bridge.h>
+ 
+ #include <sensor_msgs/image_encodings.h>
+ #include <stereo_msgs/DisparityImage.h>
++#include <std_msgs/Float32MultiArray.h>
+ 
+ #include <stereo_image_proc/DisparityConfig.h>
+ #include <dynamic_reconfigure/server.h>
+@@ -79,6 +82,7 @@ class DisparityNodelet : public nodelet::Nodelet
+   // Publications
+   boost::mutex connect_mutex_;
+   ros::Publisher pub_disparity_;
++  ros::Publisher time_pub_;
+ 
+   // Dynamic reconfigure
+   boost::recursive_mutex config_mutex_;
+@@ -141,6 +145,7 @@ void DisparityNodelet::onInit()
+   // Make sure we don't enter connectCb() between advertising and assigning to pub_disparity_
+   boost::lock_guard<boost::mutex> lock(connect_mutex_);
+   pub_disparity_ = nh.advertise<DisparityImage>("disparity", 1, connect_cb, connect_cb);
++  time_pub_ = nh.advertise<std_msgs::Float32MultiArray>("dispDuration", 10);
+ }
+ 
+ // Handles (un)subscribing when clients (un)subscribe
+@@ -172,6 +177,10 @@ void DisparityNodelet::imageCb(const ImageConstPtr& l_image_msg,
+                                const ImageConstPtr& r_image_msg,
+                                const CameraInfoConstPtr& r_info_msg)
+ {
++
++  // timing_analysis: start
++  ros::Time callback_begin = ros::Time::now();
++
+   // Update the camera model
+   model_.fromCameraInfo(l_info_msg, r_info_msg);
+ 
+@@ -209,6 +218,10 @@ void DisparityNodelet::imageCb(const ImageConstPtr& l_image_msg,
+     cv::subtract(disp_image, cv::Scalar(cx_l - cx_r), disp_image);
+   }
+ 
++  // timing analysis: end
++  ros::Time callback_end = ros::Time::now();
++  publishDuration(l_image_msg->header.stamp, callback_begin, callback_end, time_pub_);
++
+   pub_disparity_.publish(disp_msg);
+ }
+ 
+diff --git a/stereo_image_proc/src/nodelets/point_cloud2.cpp b/stereo_image_proc/src/nodelets/point_cloud2.cpp
+index fae8ba1..f2eda9a 100644
+--- a/stereo_image_proc/src/nodelets/point_cloud2.cpp
++++ b/stereo_image_proc/src/nodelets/point_cloud2.cpp
+@@ -46,10 +46,14 @@
+ #include <message_filters/sync_policies/approximate_time.h>
+ #include <image_geometry/stereo_camera_model.h>
+ 
++#include <timing_analysis/timing_analysis.h>
++
+ #include <stereo_msgs/DisparityImage.h>
+ #include <sensor_msgs/PointCloud2.h>
+ #include <sensor_msgs/image_encodings.h>
+ #include <sensor_msgs/point_cloud2_iterator.h>
++#include <std_msgs/Float32MultiArray.h>
++
+ 
+ namespace stereo_image_proc {
+ 
+@@ -75,6 +79,7 @@ class PointCloud2Nodelet : public nodelet::Nodelet
+   // Publications
+   boost::mutex connect_mutex_;
+   ros::Publisher pub_points2_;
++  ros::Publisher time_pub_;
+ 
+   // Processing state (note: only safe because we're single-threaded!)
+   image_geometry::StereoCameraModel model_;
+@@ -124,6 +129,7 @@ void PointCloud2Nodelet::onInit()
+   // Make sure we don't enter connectCb() between advertising and assigning to pub_points2_
+   boost::lock_guard<boost::mutex> lock(connect_mutex_);
+   pub_points2_  = nh.advertise<PointCloud2>("points2",  1, connect_cb, connect_cb);
++  time_pub_ = nh.advertise<std_msgs::Float32MultiArray>("pointCloudDuration", 10);
+ }
+ 
+ // Handles (un)subscribing when clients (un)subscribe
+@@ -161,6 +167,10 @@ void PointCloud2Nodelet::imageCb(const ImageConstPtr& l_image_msg,
+                                  const CameraInfoConstPtr& r_info_msg,
+                                  const DisparityImageConstPtr& disp_msg)
+ {
++
++  // timing analysis: start
++  ros::Time callback_begin = ros::Time::now();
++
+   // Update the camera model
+   model_.fromCameraInfo(l_info_msg, r_info_msg);
+ 
+@@ -262,7 +272,13 @@ void PointCloud2Nodelet::imageCb(const ImageConstPtr& l_image_msg,
+                           "unsupported encoding '%s'", encoding.c_str());
+   }
+ 
++
++  // time analysis: end
++  ros::Time callback_end = ros::Time::now();
++  publishDuration(l_image_msg->header.stamp, callback_begin, callback_end, time_pub_);
++
+   pub_points2_.publish(points_msg);
++
+ }
+ 
+ } // namespace stereo_image_proc

@@ -1,10 +1,11 @@
 #include <ros/ros.h>
+#include <timing_analysis/timing_analysis.h>
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
 #include <iostream>
-#include <std_msgs/Float32.h>
-
+#include <std_msgs/Float32MultiArray.h>
+#include <std_msgs/Header.h>
 
 class CannyDetector
 {
@@ -14,6 +15,7 @@ class CannyDetector
   image_transport::Publisher edge_pub_;
   image_transport::Publisher gray_pub_;
   image_transport::Publisher col_pub_;
+  ros::Publisher time_pub_;
   std::string input_topic_name;
   std::string frame_id;
   const int ratio = 3;
@@ -24,22 +26,25 @@ class CannyDetector
 
 
   // publish CV images as ROS sensor messages
-  void publishImage(cv::Mat src, image_transport::Publisher pub, bool color) {
+  void publishImage(cv::Mat src, bool color, std_msgs::Header src_header, ros::Time callback_begin) {
       sensor_msgs::Image msg;
       cv_bridge::CvImage bridge;
-
+      
       if (color == true)
           bridge = cv_bridge::CvImage(std_msgs::Header(), sensor_msgs::image_encodings::BGR8, src);
       else
           bridge = cv_bridge::CvImage(std_msgs::Header(), sensor_msgs::image_encodings::MONO8, src);
       bridge.toImageMsg(msg);
-      
-      // fill message header with timestamp and frame ID
-      msg.header.frame_id = frame_id; 
-      msg.header.stamp = ros::Time::now();
-      pub.publish(msg);
-  }
 
+      // copy message header of subscribed message
+      msg.header = src_header;
+
+      //timing analysis: end
+      ros::Time callback_end = ros::Time::now();
+      edge_pub_.publish(msg);
+      publishDuration(src_header.stamp, callback_begin, callback_end, time_pub_);
+  }
+      
 
 public:
   CannyDetector()
@@ -71,12 +76,17 @@ public:
       edge_pub_ = it_.advertise("/edgeDetector/edge_map", 1);
       gray_pub_ = it_.advertise("/edgeDetector/gray_edges", 1);
       col_pub_ = it_.advertise("/edgeDetector/color_edges", 1);
+      time_pub_ = nh_.advertise<std_msgs::Float32MultiArray>("edgeDuration", 10);
 
   }
 
 
   void detect(const sensor_msgs::ImageConstPtr& msg)
   {
+
+      // timing analysis: start
+      ros::Time callback_begin = ros::Time::now();
+
       cv_bridge::CvImagePtr cv_ptr;
       try
       {
@@ -107,9 +117,8 @@ public:
       cv::cvtColor(edges, edges_color, CV_GRAY2BGR);
 
       // Publish the edge map and the masked gray-scale image
-      publishImage(edges, edge_pub_, false);
-      publishImage(dst_gray, gray_pub_, false);
-      publishImage(edges_color+cv_ptr->image, col_pub_, true);
+      publishImage(edges, false, msg->header, callback_begin);
+
   }
 };
 

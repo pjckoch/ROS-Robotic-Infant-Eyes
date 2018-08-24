@@ -50,6 +50,7 @@
   <!--   <doc_depend>doxygen</doc_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>cv_bridge</build_depend>
+  <build_depend>timing_analysis</build_depend>
   <build_depend>image_transport</build_depend>
   <build_depend>opencv2</build_depend>
   <build_depend>roscpp</build_depend>
@@ -70,7 +71,6 @@
   <exec_depend>rospy</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>std_msgs</exec_depend>
-
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

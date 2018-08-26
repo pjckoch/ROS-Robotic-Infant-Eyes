@@ -9,6 +9,10 @@
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/CameraInfo.h>
 
+#include <audio_proc/FFTData.h>
+#include <audio_proc/AudioWav.h>
+#include <audio_common_msgs/AudioData.h>
+
 #include <image_transport/image_transport.h>
 
 class SynchronizeNodes {
@@ -61,6 +65,8 @@ class SynchronizeNodes {
 
   void callback(//const audioConstPtr& audio,
               //const fftConstPtr& fft,
+  void callback(const audioConstPtr& audio,
+                const fftConstPtr& fft,
                 const ImageConstPtr& img_color1,
                 const ImageConstPtr& img_color2,
                 const ImageConstPtr& img_depth,
@@ -104,6 +110,59 @@ class SynchronizeNodes {
         img_b_sub2.subscribe(nh_, img_b_top2, 1);
 
         sync_.reset(new Sync(MySyncPolicy(10),
+        // get parameters from ROS parameter server        
+        nh_.param<int>("~queue_size", queue_size_, 50);
+
+        nh_.param<std::string>("/audio_topic", audio_top, "/audio");
+        nh_.param<std::sting>("/fft_topic", fft_top, "/fftData");
+        nh_.param<std::string>("/img_topic_left", img_c_top1, "/stereo/left/image_raw");
+        nh_.param<std::string>("/img_topic_right", img_c_top2, "/stereo/right/image_raw");
+        nh_.param<std::string>("img_topic_disparity", img_d_top, "/stereo/depth");
+        nh_.param<std::string>("img_topic_edge_left", img_e_top1, "/stereo/left/edge_map");
+        nh_.param<std::string>("img_topic_edge_right", img_e_top2, "/stereo/right/edge_map");
+        nh_.param<std::string>("img_topic_blob_left", img_b_top1, "/stereo/left/blob");
+        nh_.param<std::string>("img_topic_blob_right", img_b_top2, "/stereo/right/blob");
+
+        nh_.param<bool>("msg_type_audio_common", msg_type_audio_common, false);
+
+        // subscribers
+        if (msg_type_audio_common)
+            message_filters::Subscriber<AudioData> audio_sub(nh_, audio_top1, 1);
+        else
+            message_filters::Subscriber<AudioWav> audio_sub(nh_, audio_top1, 1);
+        message_filters::Subscriber<FFTData> fft_sub(nh_, fft_top. 1);
+        message_filters::Subscriber<sensor_msgs::Image> img_c_sub1(it_, img_c_top1, 1);
+        message_filters::Subscriber<sensor_msgs::Image> img_c_sub2(it_, img_c_top2, 1);
+        message_filters::Subscriber<sensor_msgs::Image> img_d_sub(it_, img_d_top, 1);
+        message_filters::Subscriber<sensor_msgs::Image> img_e_sub1(it_, img_e_top1, 1);
+        message_filters::Subscriber<sensor_msgs::Image> img_e_sub2(it_, img_e_top2, 1);
+        message_filters::Subscriber<sensor_msgs::Image> img_b_sub1(it_, img_b_top1, 1);
+        message_filters::Subscriber<sensor_msgs::Image> img_b_sub2(it_, img_b_top2, 1);
+
+
+  typedef message_filters::sync_policies::ApproximateTime<AudioData, FFTData,
+      sensor_msgs::Image, sensor_msgs::Image, sensor_msgs::Image,
+      sensor_msgs::Image, sensor_msgs::Image, sensor_msgs::Image,
+      sensor_msgs::Image> MySyncPolicy;
+
+  typedef message_filters::Synchronizer<MySyncPolicy> Sync;
+  boost::shared_ptr<Sync> sync_;
+
+
+  std::string s = "/sync";
+
+        // publishers
+        audio_pub = nh_.advertise(audio_top + s, 1);
+        fft_pub = nh_.advertise(fft_top + s, 1);
+        img_c_pub1 = it_.advertise(img_c_top1 + s, 1);
+        img_c_pub2 = it_.advertise(img_c_top2 + s, 1);
+        img_d_pub = it_.advertise(img_d_top + s, 1);
+        img_e_pub1 = it_.advertise(img_e_top1 + s, 1);
+        img_e_pub2 = it_.advertise(img_e_top2 + s, 1);
+        img_b_pub1 = it_.advertise(img_b_top1 + s, 1);
+        img_b_pub2 = it_.advertise(img_b_top2 + s, 1);
+
+        sync_.reset(new Sync(MySyncPolicy(queue_size_),
                     audio_sub, fft_sub, img_c_sub1, img_c_sub2,
                     img_d_sub, img_e_sub1, img_e_sub2, img_b_sub1,
                     img_b_sub2);

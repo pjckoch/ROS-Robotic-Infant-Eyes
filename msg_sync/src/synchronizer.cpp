@@ -40,7 +40,6 @@ public:
     
       int queue_size_;
 
-
       // get parameters from ROS parameter server        
       nh.param<int>("queue_size", queue_size_, 50);
 
@@ -53,7 +52,6 @@ public:
       nh.param<std::string>("img_topic5", img_top5, "/stereo/left/blob");
       nh.param<std::string>("img_topic6", img_top6, "/stereo/right/blob");
       //nh.param<std::string>("img_topic7", img_top7, "/stereo/depth");
-
 
       // subscribe to topics
       //audio_sub.subscribe(nh, audio_top, 1);
@@ -84,9 +82,23 @@ public:
       sync_->registerCallback(boost::bind(&SyncMessages::callback, this, _1, _2, _3, _4, _5, _6));
   }
 
-  void callback(const ImageConstPtr& image1, const ImageConstPtr& image2, const ImageConstPtr& image3, const ImageConstPtr& image4, const ImageConstPtr& image5, const ImageConstPtr& image6) {   
+  void callback(const ImageConstPtr& image1, const ImageConstPtr& image2,
+                const ImageConstPtr& image3, const ImageConstPtr& image4,
+                const ImageConstPtr& image5, const ImageConstPtr& image6) {   
         // Starts as soon as synchronized messages are available
         std::cout << "Image topics in sync" << std::endl;
+
+        // republish everything in sync
+        //audio_pub.publish(audio);
+        //fft_pub.publish(fft);
+        image_pub1.publish(image1);
+        image_pub2.publish(image2);
+        image_pub3.publish(image3);
+        image_pub4.publish(image4);
+        image_pub5.publish(image5);
+        image_pub6.publish(image6);
+        //image_pub7.publish(image7);
+
     }  
 
 private:
@@ -124,11 +136,8 @@ private:
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "vision_node");
-
+  ros::init(argc, argv, "synchronizer");
   SyncMessages sm;
-
   ros::spin();
-
   return 0;
 }

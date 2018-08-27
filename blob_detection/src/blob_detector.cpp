@@ -180,7 +180,7 @@ public:
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "edge_detector");
-    BlobDetector cd;
+    BlobDetector bd;
     ros::spin();
     return 0;
 }

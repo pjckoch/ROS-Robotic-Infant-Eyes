@@ -5,3 +5,4 @@ image_transport_tutorial
 /CMakeLists.txt
 timing_analysis/
 tracetools/
+msg_sync/src/synchronizer_*

@@ -28,6 +28,7 @@ class SyncMessages {
 public:
   SyncMessages()
     {
+
     
       ros::NodeHandle nh; 
       image_transport::ImageTransport it_(nh);

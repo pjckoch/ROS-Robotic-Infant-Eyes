@@ -6,3 +6,4 @@ image_transport_tutorial
 timing_analysis/
 tracetools/
 msg_sync/src/synchronizer_*
+stereo_cam_stream/

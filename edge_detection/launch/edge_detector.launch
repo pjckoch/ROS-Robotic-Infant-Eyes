@@ -1,35 +1,35 @@
 <launch>
-  <arg name="image_topic_name_right" default="image_raw"/>
-  <arg name="image_topic_name_left" default="image_raw"/>
-  <arg name="lowThreshold" default="50"/>
+<arg name="image_topic_name_right" default="image_raw"/>
+<arg name="image_topic_name_left" default="image_raw"/>
+
+<arg name="lowThreshold" default="50"/>
 
 
-  <param name="detection_lowerThreshold" value="$(arg lowThreshold)"/>
+<param name="detection_lowerThreshold" value="$(arg lowThreshold)"/>
+
+
+<group ns="/stereo/right/">
+  <param name="image_topic_name" value="$(arg image_topic_name_right)"/>
+  <node name="edge_detector_right" pkg="edge_detection" type="canny_detector" output="screen">
+    <param name="image_transport" value="compressed"/>
+    <param name="frame_id" value="edge_map_right"/>
+    <remap from="/edgeDetector/edge_map" to="edge_map"/>
+    <remap from="/edgeDetector/gray_edges" to="gray_edges"/>
+    <remap from="/edgeDetector/color_edges" to="color_edges"/>
+  </node>
+</group>
 
 
 
-  <group ns="/stereo/right/">
-    <param name="image_topic_name" value="$(arg image_topic_name_right)"/>
-    <node name="edge_detector_right" pkg="edge_detection" type="canny_detector" output="screen">
-      <param name="image_transport" value="compressed"/>
-      <param name="frame_id" value="edge_map_right"/>
-      <remap from="/edgeDetector/edge_map" to="edge_map"/>
-      <remap from="/edgeDetector/gray_edges" to="gray_edges"/>
-      <remap from="/edgeDetector/color_edges" to="color_edges"/>
-    </node>
-  </group>
-
-
-
-  <group ns="/stereo/left/">
-    <param name="image_topic_name" value="$(arg image_topic_name_left)"/>
-    <node name="edge_detector_left" pkg="edge_detection" type="canny_detector" output="screen">
-      <param name="image_transport" value="compressed"/>
-      <param name="frame_id" value="edge_map_left"/>
-      <remap from="/edgeDetector/edge_map" to="edge_map"/>
-      <remap from="/edgeDetector/gray_edges" to="gray_edges"/>
-      <remap from="/edgeDetector/color_edges" to="color_edges"/>
-    </node>
-  </group>
+<group ns="/stereo/left/">
+  <param name="image_topic_name" value="$(arg image_topic_name_left)"/>
+  <node name="edge_detector_left" pkg="edge_detection" type="canny_detector" output="screen">
+    <param name="image_transport" value="compressed"/>
+    <param name="frame_id" value="edge_map_left"/>
+    <remap from="/edgeDetector/edge_map" to="edge_map"/>
+    <remap from="/edgeDetector/gray_edges" to="gray_edges"/>
+    <remap from="/edgeDetector/color_edges" to="color_edges"/>
+  </node>
+</group>
 
 </launch>

@@ -1,0 +1,37 @@
+<launch>
+
+<!-- choose which processing nodes to launch-->
+<arg name="blob_on" default="true"/>
+<arg name="edge_on" default="true"/>
+<arg name="stereo_matching" default="false"/>
+
+<!--BLOB ARGS-->
+<arg name="blob_shape" default="circular"/>
+<arg name="blob_color" default="red"/>
+
+<!--EDGE ARGS-->
+<arg name="edge_lowerThreshold" default="50"/>
+
+
+<group if="$(arg blob_on)">
+  <include file="$(find blob_detection)/launch/blob_detector.launch">
+    <arg name="color" value="$(arg blob_color)"/>
+    <arg_name="shape" value="$(arg blob_shape)"/>
+  </include>
+</group>
+
+
+<group if="$(arg edge_on)">
+  <include file="$(find edge_detection)/launch/edge_detector.launch">
+    <arg name="lowThreshold" value="$(arg edge_lowerThreshold)"/>
+  </include>
+</group>
+
+
+<group if="$(arg stereo_matching)">
+  <node ns="stereo" name="stereo_matcher" pkg="stereo_image_proc"
+   type="stereo_image_proc" output="screen">
+     <param name="approximate_sync" value="true"/>
+     <param_name="image_transport" value="compressed"/>
+  </node>
+</group>

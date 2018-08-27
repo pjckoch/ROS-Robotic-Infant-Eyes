@@ -16,7 +16,7 @@
 <group if="$(arg blob_on)">
   <include file="$(find blob_detection)/launch/blob_detector.launch">
     <arg name="color" value="$(arg blob_color)"/>
-    <arg_name="shape" value="$(arg blob_shape)"/>
+    <arg name="shape" value="$(arg blob_shape)"/>
   </include>
 </group>
 
@@ -32,6 +32,7 @@
   <node ns="stereo" name="stereo_matcher" pkg="stereo_image_proc"
    type="stereo_image_proc" output="screen">
      <param name="approximate_sync" value="true"/>
-     <param_name="image_transport" value="compressed"/>
+     <param name="image_transport" value="compressed"/>
   </node>
 </group>
+</launch>

@@ -19,6 +19,10 @@
 using namespace sensor_msgs;
 using namespace message_filters;
 
+ros::Duration dur;
+ros::Time begin;
+
+
 class SyncMessages {
 
 public:
@@ -80,6 +84,7 @@ public:
       // ApproximateTime takes a queue size as its constructor argument, hence MySyncPolicy(10)
       sync_.reset(new Sync(MySyncPolicy(10), image1_sub, image2_sub, image3_sub, image4_sub, image5_sub, image6_sub));
       sync_->registerCallback(boost::bind(&SyncMessages::callback, this, _1, _2, _3, _4, _5, _6));
+
   }
 
   void callback(const ImageConstPtr& image1, const ImageConstPtr& image2,
@@ -91,6 +96,7 @@ public:
         // republish everything in sync
         //audio_pub.publish(audio);
         //fft_pub.publish(fft);
+        begin = ros::Time::now();
         image_pub1.publish(image1);
         image_pub2.publish(image2);
         image_pub3.publish(image3);
@@ -98,6 +104,8 @@ public:
         image_pub5.publish(image5);
         image_pub6.publish(image6);
         //image_pub7.publish(image7);
+        dur = ros::Time::now() - begin;
+        std::cout << dur.toSec();
 
     }  
 

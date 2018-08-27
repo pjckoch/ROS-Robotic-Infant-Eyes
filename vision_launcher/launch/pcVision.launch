@@ -29,10 +29,18 @@
 
 
 <group if="$(arg stereo_matching)">
+  <node name="image_republisher_left" pkg="image_transport" type="republish"
+   args="compressed in:=/stereo/left/image raw out:=/stereo/left/image_raw">
+  </node>
+
+  <node name="image_republisher_right" pkg="image_transport" type="republish"
+   args="compressed in:=/stereo/right/image raw out:=/stereo/right/image_raw">
+  </node>
+  
   <node ns="stereo" name="stereo_matcher" pkg="stereo_image_proc"
-   type="stereo_image_proc" output="screen">
-     <param name="approximate_sync" value="true"/>
-     <param name="image_transport" value="compressed"/>
+    type="stereo_image_proc" output="screen">
+      <param name="approximate_sync" value="true"/>
+      <param name="image_transport" value="compressed"/>
   </node>
 </group>
 </launch>

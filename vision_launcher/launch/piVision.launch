@@ -36,6 +36,7 @@
   <param name="image_height" value="$(arg image_height)"/>
   <param name="pixel_format" value="yuyv" />
   <param name="io_method" value="mmap"/>
+  <param name="autoexposure" value="false"/>
   <remap from="$(arg right_camera_name)/image_raw" to="$(arg right_camera_name)/$(arg image_topic_name_right)" />
   <param name="framerate" value="$(arg framerate)"/> 
   <!-- if camera_info is available, we will use it-->
@@ -53,6 +54,7 @@
   <param name="image_height" value="$(arg image_height)"/>
   <param name="pixel_format" value="yuyv" />
   <param name="io_method" value="mmap"/>
+  <param name="autoexposure" value="false"/>
   <param name="framerate" value="$(arg framerate)"/> 
   <remap from="$(arg left_camera_name)/image_raw" to="$(arg left_camera_name)/$(arg image_topic_name_left)"/>
   <!-- if camera_info is available, we will use it-->

@@ -8,3 +8,4 @@ tracetools/
 msg_sync/src/synchronizer_*
 stereo_cam_stream/
 video_stream_opencv/
+piVision.launch

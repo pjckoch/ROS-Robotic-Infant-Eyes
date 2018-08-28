@@ -1,0 +1,86 @@
+<launch>
+
+<!-- 0 corresponds to /dev/video0 -->
+<arg name="video_device_right" default="0" />
+<arg name="video_device_left" default="1" />
+
+<arg name="image_width" default="320" />
+<arg name="image_height" default="240" />
+
+<arg name="image_namespace" default="stereo" />
+ 
+<arg name="right_image_node" default="right" />
+<arg name="left_image_node" default="left" />
+ 
+ 
+<arg name="image_topic_name" default="image" />
+
+<arg name="right_camera_name" default="right" />
+<arg name="left_camera_name" default="left" />
+
+<arg name="framerate" default="30" /> 
+   
+<arg name="camera_info_path" default="stereo_camera_info"/>
+
+
+<!-- launch right video stream -->
+<group ns="$(arg image_namespace)">
+  <include file="$(find video_stream_opencv)/launch/camera.launch" >
+    <!-- node name and ros graph name -->
+    <arg name="camera_name" value="$(arg right_camera_name)" />
+    <arg name="video_stream_provider" value="$(arg video_device_right)" />
+    <!-- set camera fps to (if the device allows) -->
+    <arg name="set_camera_fps" value="$(arg framerate)"/>
+    <!-- set buffer queue size of frame capturing to (1 means we want the latest frame only) -->
+    <arg name="buffer_queue_size" value="1" />
+    <!-- throttling the querying of frames to -->
+    <arg name="fps" value="$(arg framerate)" />
+    <!-- setting frame_id -->
+    <arg name="frame_id" value="right_optical_frame" />
+    <arg name="camera_info_url" value="file://${ROS_HOME}/$(arg camera_info_path)/right.yaml" />
+    <!-- flip the image horizontally (mirror it) -->
+    <arg name="flip_horizontal" value="false" />
+    <!-- flip the image vertically -->
+    <arg name="flip_vertical" value="false" />
+    <!-- force width and height, 0 means no forcing -->
+    <arg name="width" value="$(arg image_width)"/>
+    <arg name="height" value="$(arg image_height)"/>
+    
+    <!-- visualize on an image_view window the stream generated -->
+    <arg name="visualize" value="false" />
+
+    <remap from="$(arg right_camera_name)/image_raw" to="$(arg right_camera_name/image"/>
+ </include>
+
+ <!-- launch left video stream -->
+ <include file="$(find video_stream_opencv)/launch/camera.launch" >
+   <!-- node name and ros graph name -->
+   <arg name="camera_name" value="$(arg left_camera_name)" />
+   <arg name="video_stream_provider" value="$(arg video_device_left)" />
+   <!-- set camera fps to (if the device allows) -->
+   <arg name="set_camera_fps" value="$(arg framerate)"/>
+   <!-- set buffer queue size of frame capturing to (1 means we want the latest frame only) -->
+   <arg name="buffer_queue_size" value="1" />
+   <!-- throttling the querying of frames to -->
+   <arg name="fps" value="$(arg framerate)" />
+   <!-- setting frame_id -->
+   <arg name="frame_id" value="left_optical_frame" />
+   <arg name="camera_info_url" value="file://${ROS_HOME}/$(arg camera_info_path)/left.yaml" />
+   <!-- flip the image horizontally (mirror it) -->
+   <arg name="flip_horizontal" value="false" />
+   <!-- flip the image vertically -->
+   <arg name="flip_vertical" value="false" />
+   <!-- force width and height, 0 means no forcing -->
+   <arg name="width" value="$(arg image_width)"/>
+   <arg name="height" value="$(arg image_height)"/>
+    
+   <!-- visualize on an image_view window the stream generated -->
+   <arg name="visualize" value="false" />
+
+   <remap from="$(arg left_camera_name)/image_raw" to="$(arg left_camera_name)/image"/>
+ </include>
+
+</group>
+
+</launch>
+

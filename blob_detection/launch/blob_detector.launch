@@ -1,6 +1,6 @@
 <launch>
-<arg name="image_topic_name_right" default="image_raw"/>
-<arg name="image_topic_name_left" default="image_raw"/>
+<arg name="image_topic_name_right" default="image"/>
+<arg name="image_topic_name_left" default="image"/>
 
 <arg name="shape" default="circular"/>
 <arg name="color" default="red"/>

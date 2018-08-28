@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <launch>
 
 <!-- 0 corresponds to /dev/video0 -->
@@ -7,7 +8,7 @@
 <arg name="image_width" default="320" />
 <arg name="image_height" default="240" />
 
-<arg name="image_namespace" default="stereo" />
+<arg name="image_ns" default="stereo" />
  
 <arg name="right_image_node" default="right" />
 <arg name="left_image_node" default="left" />
@@ -24,7 +25,11 @@
 
 
 <!-- launch right video stream -->
-<group ns="$(arg image_namespace)">
+<group ns="$(arg image_ns)">
+
+  <remap from="/$(arg image_ns)/$(arg right_camera_name)/image_raw" to="image"/>
+  <remap from="/$(arg image_ns)/$(arg left_camera_name)/image_raw" to="image"/>
+
   <include file="$(find video_stream_opencv)/launch/camera.launch" >
     <!-- node name and ros graph name -->
     <arg name="camera_name" value="$(arg right_camera_name)" />
@@ -49,7 +54,6 @@
     <!-- visualize on an image_view window the stream generated -->
     <arg name="visualize" value="false" />
 
-    <remap from="$(arg right_camera_name)/image_raw" to="$(arg right_camera_name/image"/>
  </include>
 
  <!-- launch left video stream -->
@@ -77,10 +81,10 @@
    <!-- visualize on an image_view window the stream generated -->
    <arg name="visualize" value="false" />
 
-   <remap from="$(arg left_camera_name)/image_raw" to="$(arg left_camera_name)/image"/>
  </include>
 
 </group>
+
 
 </launch>
 

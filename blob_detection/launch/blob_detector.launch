@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <launch>
 <arg name="image_topic_name_right" default="image"/>
 <arg name="image_topic_name_left" default="image"/>

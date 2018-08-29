@@ -44,7 +44,7 @@ The ROS nodes in this repository can be analyzed regarding their timing. Therefo
 - **camera_info_path**: This points to the directory where the camera calibration data is stored.
 
 
-### pcAudioProcessing.launch:
+### [pcVisualProcessing.launch](vision_launcher/launch/pcVisualProcessing.launch):
 
 - **edge_on**: Choose whether to run the edge detector.
 - **blob_on**: Choose whether to run the blob detector.
@@ -55,7 +55,7 @@ The ROS nodes in this repository can be analyzed regarding their timing. Therefo
 ## Notes
 
 - If running the visual system over distributed machines that are connected over WiFi, it is recommendable to use compressed image streams due to bandwidth limitations.
-- Therefore the processing nodes are started with the parameter  `image_transport:=compressed`.
+- Therefore the processing nodes are launched with the parameter  `image_transport:=compressed` by default.
 - However, for stereo matching, this did not work. The stereo matcher keeps subscribing to the raw image stream.
 - Hence, a republisher is used which runs on the machine that does the processing. It subscribes to the compressed image stream and republishes it in raw format for the stereo matcher
 

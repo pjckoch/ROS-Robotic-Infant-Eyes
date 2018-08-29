@@ -6,7 +6,7 @@ LICENSE SUMMARY:
 ------------------------------------------
                BSD License
 applies to:
-- ROS, Copyright (c) 2008, Willow Garage, Inc.
+- ros, Copyright (c) 2008, Willow Garage, Inc.
 - std_msgs, Copyright (c) 2008, Willow Garage, Inc.
 - sensor_msgs, Copyright (c) 2008, Willow Garage, Inc.
 - cv_bridge, Copyright (c) 2011, Willow Garage, Inc.

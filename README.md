@@ -40,7 +40,7 @@ The ROS nodes in this repository can be analyzed regarding their timing. Therefo
 - **framerate**: The frame rate (FPS) at which image frames are grabbed from the camera.
 - **image_ns**: The namespace under which the video stream is launched. The processing nodes will subscribe to images from the "stereo" namespace.
 - **camera_name_right** and **camera_name_left**: Like the **image_ns**, these parameters determine the topic names under which the video stream is published. Moreover the names are used when searching for the camera info.
-- **image_topic_name**: The default topic name would be `/<image_ns>/<camera_name_*>/image_raw`, but this topic name will be used by a republisher (see notes below), so the original stream is remapped to `/<image_ns>/<camera_name_*>/<image_topic_name>`.
+- **image_topic_name**: The default topic name would be `/<image_ns>/<camera_name_*>/image_raw`, but this topic name will be used by a republisher (see remarks below), so the original stream is remapped to `/<image_ns>/<camera_name_*>/<image_topic_name>`.
 - **camera_info_path**: This points to the directory where the camera calibration data is stored.
 
 
@@ -52,7 +52,7 @@ The ROS nodes in this repository can be analyzed regarding their timing. Therefo
 - **blob_shape** and **blob_color**: The blob detector will get its parameters from two yaml-files. One specifies the shape and one the color of the blob to detect. The parameters must must match existing file names (without the .yaml extension). This repository comes with a [circular](blob_detection/config/circular.yaml) shape and three colors ([red](blob_detection/config/red.yaml), [green](blob_detection/config/green.yaml) and [blue](blob_detection/config/blue.yaml)). You are free to add more configuration files.
 - **edge_lowerThreshold**: This specifies the lower threshold for the Canny edge detector. See the [OpenCV Documentation](https://docs.opencv.org/2.4/doc/tutorials/imgproc/imgtrans/canny_detector/canny_detector.html) for further information.
 
-## Notes
+## Remarks
 
 - If running the visual system over distributed machines that are connected over WiFi, it is recommendable to use compressed image streams due to bandwidth limitations.
 - Therefore the processing nodes are launched with the parameter  `image_transport:=compressed` by default.

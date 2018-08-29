@@ -1,3 +1,22 @@
+/*
+The following is a summary of the licenses involved in this project.
+Please also refer to the LICENSE folder in this github repository
+for full licensing information.
+LICENSE SUMMARY:
+------------------------------------------
+               BSD License
+applies to:
+- ROS, Copyright (c) 2008, Willow Garage, Inc.
+- std_msgs, Copyright (c) 2008, Willow Garage, Inc.
+- sensor_msgs, Copyright (c) 2008, Willow Garage, Inc.
+- cv_bridge, Copyright (c) 2011, Willow Garage, Inc.
+- opencv2, Copyright (C) 2000-2015, Intel Corporation, all rights reserved.
+          Copyright (C) 2009-2011, Willow Garage Inc., all rights reserved.
+          Copyright (C) 2015, OpenCV Foundation, all rights reserved.
+          Copyright (C) 2015, Itseez Inc., all rights reserved.
+------------------------------------------
+*/
+
 #include <ros/ros.h>
 #include <ros/console.h>
 #include <timing_analysis/timing_analysis.h>

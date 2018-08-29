@@ -2,8 +2,8 @@
 <launch>
 
 <!-- choose which processing nodes to launch-->
-<arg name="blob_on" default="true"/>
 <arg name="edge_on" default="true"/>
+<arg name="blob_on" default="true"/>
 <arg name="stereo_matching" default="false"/>
 
 <!--BLOB ARGS-->

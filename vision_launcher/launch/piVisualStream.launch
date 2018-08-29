@@ -9,15 +9,11 @@
 <arg name="image_height" default="240" />
 
 <arg name="image_ns" default="stereo" />
- 
-<arg name="right_image_node" default="right" />
-<arg name="left_image_node" default="left" />
- 
+
+<arg name="camera_name_right" default="right" />
+<arg name="camera_name_left" default="left" />
  
 <arg name="image_topic_name" default="image" />
-
-<arg name="right_camera_name" default="right" />
-<arg name="left_camera_name" default="left" />
 
 <arg name="framerate" default="30" /> 
    
@@ -27,12 +23,12 @@
 <!-- launch right video stream -->
 <group ns="$(arg image_ns)">
 
-  <remap from="/$(arg image_ns)/$(arg right_camera_name)/image_raw" to="image"/>
-  <remap from="/$(arg image_ns)/$(arg left_camera_name)/image_raw" to="image"/>
+  <remap from="/$(arg image_ns)/$(arg camera_name_right)/image_raw" to="image"/>
+  <remap from="/$(arg image_ns)/$(arg camera_name_left)/image_raw" to="image"/>
 
   <include file="$(find video_stream_opencv)/launch/camera.launch" >
     <!-- node name and ros graph name -->
-    <arg name="camera_name" value="$(arg right_camera_name)" />
+    <arg name="camera_name" value="$(arg camera_name_right)" />
     <arg name="video_stream_provider" value="$(arg video_device_right)" />
     <!-- set camera fps to (if the device allows) -->
     <arg name="set_camera_fps" value="$(arg framerate)"/>
@@ -42,7 +38,7 @@
     <arg name="fps" value="$(arg framerate)" />
     <!-- setting frame_id -->
     <arg name="frame_id" value="right_optical_frame" />
-    <arg name="camera_info_url" value="file://${ROS_HOME}/$(arg camera_info_path)/right.yaml" />
+    <arg name="camera_info_url" value="file://${ROS_HOME}/$(arg camera_info_path)/$(arg camera_name_right).yaml" />
     <!-- flip the image horizontally (mirror it) -->
     <arg name="flip_horizontal" value="false" />
     <!-- flip the image vertically -->
@@ -59,7 +55,7 @@
  <!-- launch left video stream -->
  <include file="$(find video_stream_opencv)/launch/camera.launch" >
    <!-- node name and ros graph name -->
-   <arg name="camera_name" value="$(arg left_camera_name)" />
+   <arg name="camera_name" value="$(arg camera_name_left)" />
    <arg name="video_stream_provider" value="$(arg video_device_left)" />
    <!-- set camera fps to (if the device allows) -->
    <arg name="set_camera_fps" value="$(arg framerate)"/>
@@ -69,7 +65,7 @@
    <arg name="fps" value="$(arg framerate)" />
    <!-- setting frame_id -->
    <arg name="frame_id" value="left_optical_frame" />
-   <arg name="camera_info_url" value="file://${ROS_HOME}/$(arg camera_info_path)/left.yaml" />
+   <arg name="camera_info_url" value="file://${ROS_HOME}/$(arg camera_info_path)/$(arg camera_name_left).yaml" />
    <!-- flip the image horizontally (mirror it) -->
    <arg name="flip_horizontal" value="false" />
    <!-- flip the image vertically -->

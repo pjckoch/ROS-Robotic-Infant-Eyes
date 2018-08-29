@@ -17,7 +17,7 @@ The **vision_launcher** package is only used for launching the robotic infant's 
 
 Every step (capture, edge detection, blob detection, stereo matching) is implemented as a separate ROS node. This enables us to the spread the nodes across distributed system compontens. In my case, the USB camera driver runs on a Raspberry Pi Zero W, whereas the nodes run on a PC. Remember to use a common ROS_MASTER_URI on the different devices.
 
-### Prerequisites:
+## Prerequisites:
 The ROS nodes in this repository can be analyzed regarding their timing. Therefore, you will also need the [ROS-Timing]
 - Clone this repository.
 - Clone the [ROS-Timing](https://github.com/pjckoch/ROS-Timing.git) repository: Allows for timing analyzation and synchronization.

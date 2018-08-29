@@ -34,6 +34,7 @@ The ROS nodes in this repository can be analyzed regarding their timing. Therefo
 ## ROS parameters
 
 ### piVisualStream.launch:
+
 - **video_device_right** and **video_device_left**: The index for the right and left camera respectively. For example, index 0 corresponds to `/dev/video0`
 - **image width** and **image height**: Specify the resolution to use.
 - **framerate**: The frame rate (FPS) at which image frames are grabbed from the camera.
@@ -44,13 +45,21 @@ The ROS nodes in this repository can be analyzed regarding their timing. Therefo
 
 
 ### pcAudioProcessing.launch:
+
 - **edge_on**: Choose whether to run the edge detector.
 - **blob_on**: Choose whether to run the blob detector.
 - **stereo_matching**: Choose whether to run the stereo matcher. Note that this is the only processing node that is deactivated by default, because it requires a camera calibration. The edge and blob detector can be run without calibration.
-- **blob_shape** and **blob_color**: The blob detector will get its parameters from two yaml-files. One specifies the shape and one the color of the blob to detect. The parameters must must match an existing file name (without the .yaml extension). This repository comes with a [circular](blob_detection/config/circular.yaml) shape and three colors ([red](blob_detection/config/red.yaml), [green](blob_detection/config/green.yaml) and [blue](blob_detection/config/blue.yaml)). You are free to add more configuration files.
+- **blob_shape** and **blob_color**: The blob detector will get its parameters from two yaml-files. One specifies the shape and one the color of the blob to detect. The parameters must must match existing file names (without the .yaml extension). This repository comes with a [circular](blob_detection/config/circular.yaml) shape and three colors ([red](blob_detection/config/red.yaml), [green](blob_detection/config/green.yaml) and [blue](blob_detection/config/blue.yaml)). You are free to add more configuration files.
+- **edge_lowerThreshold**: This specifies the lower threshold for the Canny edge detector. See the [OpenCV Documentation](https://docs.opencv.org/2.4/doc/tutorials/imgproc/imgtrans/canny_detector/canny_detector.html) for further information.
 
 ## Notes
+
 - If running the visual system over distributed machines that are connected over WiFi, it is recommendable to use compressed image streams due to bandwidth limitations.
 - Therefore the processing nodes are started with the parameter  `image_transport:=compressed`.
 - However, for stereo matching, this did not work. The stereo matcher keeps subscribing to the raw image stream.
 - Hence, a republisher is used which runs on the machine that does the processing. It subscribes to the compressed image stream and republishes it in raw format for the stereo matcher
+
+## License
+
+This project is licensed under the 3-Clause-BSD-License (see the [LICENSE.md](LICENSE/LICENSE.md) for details). For third-party licenses, see [LICENSE-3RD-PARTY.md](LICENSE/LICENSE-3RD-PARTY.md).
+

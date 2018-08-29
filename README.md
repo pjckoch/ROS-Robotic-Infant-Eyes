@@ -15,7 +15,7 @@ The **blob_detection** package contains one C++ program:
 
 The **vision_launcher** package is only used for launching the robotic infant's visual system, i.e. the stereo image stream, the edge detector, the blob detector and the stereo matcher.
 
-Every step (capture, edge detection, blob detection, stereo matching) is implemented as a separate ROS node. This enables us to the spread the nodes across distributed system compontens. In my case, the USB camera driver runs on a Raspberry Pi Zero W, whereas the other two nodes run on a PC. Remember to use a common ROS_MASTER_URI on the different devices.
+Every step (capture, edge detection, blob detection, stereo matching) is implemented as a separate ROS node. This enables us to the spread the nodes across distributed system compontens. In my case, the USB camera driver runs on a Raspberry Pi Zero W, whereas the nodes run on a PC. Remember to use a common ROS_MASTER_URI on the different devices.
 
 ### Prerequisites:
 The ROS nodes in this repository can be analyzed regarding their timing. Therefore, you will also need the [ROS-Timing]
@@ -26,8 +26,8 @@ The ROS nodes in this repository can be analyzed regarding their timing. Therefo
 - Calibrate your cameras: `rosrun camera_calibration cameracalibrator.py --size 8x6 --square 0.108 right:=/stereo/right/image_raw left:=/stereo/left/image_raw right_camera:=/stereo/right left_camera:=/stereo/left  --no-service-check --approximate=0.1`. (`--size` refers to the number of internal corners of your chessboard, `--square` refers to the edge length of one square on the chessboard. For more information on the parameters, consult the [ROS wiki](http://wiki.ros.org/camera_calibration)).
 
 ## How to use
-1. `roslaunch vision_launcher piVisualStream.launch` on any machine connected to two USB cameras. This will start the video stream
-2. `roslaunch vision_launcher pcVisualProcessing.launch` on any machine of your choice. Keep in mind that visual processing is computationally expensive. If you wish to use only camera (without stereo matching), you will have to adapt the launch files.
+1. `roslaunch vision_launcher piVisualStream.launch` on any machine connected to two USB cameras. This will start the video stream.
+2. `roslaunch vision_launcher pcVisualProcessing.launch` on any machine of your choice. This will do the processing. Keep in mind that visual processing is computationally expensive. If you wish to use only camera (without stereo matching), you will have to adapt the launch files. 
 
 **Remark**: you can optionally pass parameters to the nodes when calling roslaunch. See below for a list of parameters.
 
@@ -36,11 +36,21 @@ The ROS nodes in this repository can be analyzed regarding their timing. Therefo
 ### piVisualStream.launch:
 - **video_device_right** and **video_device_left**: The index for the right and left camera respectively. For example, index 0 corresponds to `/dev/video0`
 - **image width** and **image height**: Specify the resolution to use.
+- **framerate**: The frame rate (FPS) at which image frames are grabbed from the camera.
 - **image_ns**: The namespace under which the video stream is launched. The processing nodes will subscribe to images from the "stereo" namespace.
-- **camera_name_right** and **camera_name_left**: Like the **image_ns**, these parameters determine the topic name under which the video stream is published.
-- **fft_at_robot**: Set this to `true` if you want to perform the FFT directly on your robot. Keep in mind that it might run slower than on a PC.
-- **depth**: Only for audio_common driver. Specifies the bit depth.
+- **camera_name_right** and **camera_name_left**: Like the **image_ns**, these parameters determine the topic names under which the video stream is published. Moreover the names are used when searching for the camera info.
+- **image_topic_name**: The default topic name would be `/<image_ns>/<camera_name_*>/image_raw`, but this topic name will be used by a republisher (see notes below), so the original stream is remapped to `/<image_ns>/<camera_name_*>/<image_topic_name>`.
+- **camera_info_path**: This points to the directory where the camera calibration data is stored.
 
-- **channels**: Only for audio_common driver. Number of channels to use. The audio_proc driver supports only 1 channel.
 
 ### pcAudioProcessing.launch:
+- **edge_on**: Choose whether to run the edge detector.
+- **blob_on**: Choose whether to run the blob detector.
+- **stereo_matching**: Choose whether to run the stereo matcher. Note that this is the only processing node that is deactivated by default, because it requires a camera calibration. The edge and blob detector can be run without calibration.
+- **blob_shape** and **blob_color**: The blob detector will get its parameters from two yaml-files. One specifies the shape and one the color of the blob to detect. The parameters must must match an existing file name (without the .yaml extension). This repository comes with a [circular](blob_detection/config/circular.yaml) shape and three colors ([red](blob_detection/config/red.yaml), [green](blob_detection/config/green.yaml) and [blue](blob_detection/config/blue.yaml)). You are free to add more configuration files.
+
+## Notes
+- If running the visual system over distributed machines that are connected over WiFi, it is recommendable to use compressed image streams due to bandwidth limitations.
+- Therefore the processing nodes are started with the parameter  `image_transport:=compressed`.
+- However, for stereo matching, this did not work. The stereo matcher keeps subscribing to the raw image stream.
+- Hence, a republisher is used which runs on the machine that does the processing. It subscribes to the compressed image stream and republishes it in raw format for the stereo matcher

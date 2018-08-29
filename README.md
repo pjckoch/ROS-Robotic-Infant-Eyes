@@ -8,7 +8,7 @@ The repository provides tools for capturing live stereo video from two USB camer
 There are three catkin packages in this repository: edge_detection, blob_detection and vision_launcher.
 
 The **edge_detection package** contains one C++ program:
-- [canny_detector.cpp](edge_detection/src/canny_detector.launch): An edge_detector which uses the Canny algorithm. It subscribes to an image stream and publishes the corresponding edge map. 
+- [canny_detector.cpp](edge_detection/src/canny_detector.cpp): An edge_detector which uses the Canny algorithm. It subscribes to an image stream and publishes the corresponding edge map. 
 
 The **blob_detection** package contains one C++ program:
 - [blob_detector.cpp](blob_detection/src/blob_detector.cpp): A blob detector which uses OpenCV's SimpleBlobDetector algorithm. It subscribes to an image stream, filters for a user-specified color and then searches for blobs of a user-specified shape. It publishes the single-channel image with all detected blobs circled in green.

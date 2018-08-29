@@ -19,14 +19,19 @@ applies to:
 
 #include <ros/ros.h>
 #include <ros/console.h>
+
 #include <timing_analysis/timing_analysis.h>
+
 #include <image_transport/image_transport.h>
+
 #include <cv_bridge/cv_bridge.h>
-#include <sensor_msgs/image_encodings.h>
 #include <opencv2/features2d.hpp>
 #include <opencv2/core.hpp>
+
 #include <iostream>
 #include <vector>
+
+#include <sensor_msgs/image_encodings.h>
 #include <std_msgs/Float32MultiArray.h>
 #include <std_msgs/Header.h>
 

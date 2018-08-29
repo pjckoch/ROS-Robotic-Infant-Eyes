@@ -33,7 +33,7 @@ The ROS nodes in this repository can be analyzed regarding their timing. Therefo
 
 ## ROS parameters
 
-### piVisualStream.launch:
+### [piVisualStream.launch](vision_launcher/launch/piVisualStream.launch):
 
 - **video_device_right** and **video_device_left**: The index for the right and left camera respectively. For example, index 0 corresponds to `/dev/video0`
 - **image width** and **image height**: Specify the resolution to use.

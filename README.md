@@ -29,7 +29,7 @@ The ROS nodes in this repository can be analyzed regarding their timing. Therefo
 1. `roslaunch vision_launcher piVisualStream.launch` on any machine connected to two USB cameras. This will start the video stream.
 2. `roslaunch vision_launcher pcVisualProcessing.launch` on any machine of your choice. This will do the processing. Keep in mind that visual processing is computationally expensive. If you wish to use only camera (without stereo matching), you will have to adapt the launch files. 
 
-**Remark**: you can optionally pass parameters to the nodes when calling roslaunch. See below for a list of parameters.
+**Remark**: You can optionally pass parameters to the nodes when calling roslaunch. See below for a list of parameters.
 
 ## ROS parameters
 

@@ -19,10 +19,11 @@ Every step (capture, edge detection, blob detection, stereo matching) is impleme
 
 ## Prerequisites
 The ROS nodes in this repository can be analyzed regarding their timing. Therefore, you will also need the [ROS-Timing]
-- Clone this repository.
-- Clone the [ROS-Timing](https://github.com/pjckoch/ROS-Timing.git) repository: Allows for timing analyzation and synchronization.
-- Clone the [video_stream_opencv](https://github.com/ros-drivers/video_stream_opencv.git) repository: Used as USB camera driver.
-- Clone the [ROS image_pipeline](https://github.com/ros-perception/image_pipeline.git): Necessary for computer vision related applications in ROS. Used e.g. for camera calibration and stereo matching. This [patch](patch/stereo_image_proc_timing_analysis.patch) can be applied to the stereo_image_proc to analyze timing.
+- Clone the following repositories into your catkin workspace:
+  - this repository
+  - the [ROS-Timing](https://github.com/pjckoch/ROS-Timing.git) repository: Supplies tools for timing analyzation and synchronization.
+  - the [video_stream_opencv](https://github.com/ros-drivers/video_stream_opencv.git) repository: Used as USB camera driver.
+  - the [ROS image_pipeline](https://github.com/ros-perception/image_pipeline.git): Necessary for computer vision related applications in ROS. Used e.g. for camera calibration and stereo matching. This [patch](patch/stereo_image_proc_timing_analysis.patch) can be applied to the stereo_image_proc to analyze timing.
 - Calibrate your cameras: `rosrun camera_calibration cameracalibrator.py --size 8x6 --square 0.108 right:=/stereo/right/image_raw left:=/stereo/left/image_raw right_camera:=/stereo/right left_camera:=/stereo/left  --no-service-check --approximate=0.1`. (`--size` refers to the number of internal corners of your chessboard, `--square` refers to the edge length of one square on the chessboard. For more information on the parameters, consult the [ROS wiki](http://wiki.ros.org/camera_calibration)).
 - Build your catkin workspace.
 

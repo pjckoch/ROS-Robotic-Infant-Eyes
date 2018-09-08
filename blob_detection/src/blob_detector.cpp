@@ -49,6 +49,7 @@ class BlobDetector
   int tmp_minRepeatability, tmp_blobColor;
   // color hue ranges for HSV thresholding
   int lLowH, lLowV, lLowS, lHighH, lHighV, lHighS;
+  // in the case of red, a second range is required, as red = 0 and red = 180
   bool secondRange;
   int uLowH, uLowV, uLowS, uHighH, uHighV, uHighS;
 
@@ -174,13 +175,14 @@ public:
       // Convert to HSV as it delivers better color separation
       cv::cvtColor(cv_ptr->image, src_HSV, cv::COLOR_BGR2HSV);
 
-      // Threshold images, filter for red pixels
+      // Threshold images
       cv::inRange(src_HSV, cv::Scalar(lLowH, lLowS, lLowV), cv::Scalar(lHighH, lHighS, lHighV), lower_hue_range);
-      cv::inRange(src_HSV, cv::Scalar(uLowH, uLowS, uLowV), cv::Scalar(uHighH, uHighS, uHighV), upper_hue_range);
 
-      // Combine thresholds if there are two ranges
-      if (secondRange)
+      // Combine thresholds if there are two color ranges
+      if (secondRange) {
+                cv::inRange(src_HSV, cv::Scalar(uLowH, uLowS, uLowV), cv::Scalar(uHighH, uHighS, uHighV), upper_hue_range);
           cv::addWeighted(lower_hue_range, 1.0, upper_hue_range, 1.0, 0.0, hue_img);
+      }
       else
           hue_img = lower_hue_range;
       // Blur to avoid false positives

@@ -51,14 +51,12 @@ class CannyDetector
 
 
   // publish CV images as ROS sensor messages
-  void publishImage(cv::Mat src, bool color, std_msgs::Header src_header, ros::Time callback_begin) {
+  void publishImage(cv::Mat src, std_msgs::Header src_header, ros::Time callback_begin) {
       sensor_msgs::Image msg;
       cv_bridge::CvImage bridge;
-      
-      if (color == true)
-          bridge = cv_bridge::CvImage(std_msgs::Header(), sensor_msgs::image_encodings::BGR8, src);
-      else
-          bridge = cv_bridge::CvImage(std_msgs::Header(), sensor_msgs::image_encodings::MONO8, src);
+
+      // convert CV image to ROS sensor message 
+      bridge = cv_bridge::CvImage(std_msgs::Header(), sensor_msgs::image_encodings::MONO8, src);
       bridge.toImageMsg(msg);
 
       // copy message header of subscribed message
@@ -124,25 +122,19 @@ public:
       }
 
       // declare CV Mat objects
-      cv::Mat gray, dst_gray, edges, edges_color;
+      cv::Mat gray, edge_map;
 
       // convert to gray image
       cv::cvtColor(cv_ptr->image, gray, CV_BGR2GRAY); 
 
       // Reduce noise
-      cv::GaussianBlur(gray, edges, cv::Size(3,3), 0, 0);
+      cv::GaussianBlur(gray, edge_map, cv::Size(3,3), 0, 0);
 
       // Canny edge detector
-      cv::Canny(edges, edges, lowerThreshold, upperThreshold, kernel_size);
-
-      // mask gray image with edge map and copy to dst_gray
-      gray.copyTo(dst_gray, edges);
-
-      // mask original color image with edge map and copy to dst_color
-      cv::cvtColor(edges, edges_color, CV_GRAY2BGR);
+      cv::Canny(edge_map, edge_map, lowerThreshold, upperThreshold, kernel_size);
 
       // Publish the edge map and the masked gray-scale image
-      publishImage(edges, false, msg->header, callback_begin);
+      publishImage(edge_map, msg->header, callback_begin);
 
   }
 };

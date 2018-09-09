@@ -41,7 +41,12 @@
   <node ns="stereo" name="stereo_matcher" pkg="stereo_image_proc"
     type="stereo_image_proc" output="screen">
       <param name="approximate_sync" value="true"/>
-      <param name="image_transport" value="compressed"/>
   </node>
-</group>
+  <node name="disparity_viewer" pkg="image_view" type="stereo_view"
+    args="stereo:=/stereo image:=image_rect _approximate_sync:=True _queue_size:=10">
+  </node>
+  <node name="rqt_reconfigure" pkg="rqt_reconfigure" type="rqt_reconfigure">
+  </node>
+
+  </group>
 </launch>
